@@ -19,24 +19,27 @@ public class Paddle : MonoBehaviour
     public static bool StartSet;
 
 
-    void Awake()
+    public void Begin()
     {
+        // Get components
         rb = GetComponent<Rigidbody2D>();
-    }
 
-    void Start()
-    {
         // Get camera values for the screen boundaries, for limitting the paddle movement
         GetScreenValues();
 
+        // Paddle
         //ResizePaddle();
         var collSize = GetComponent<CapsuleCollider2D>().size;
         paddleSize = new Vector2(collSize.x * transform.localScale.x, collSize.y * transform.localScale.y);
-
-        // Start the level letting the player move the player at any point
         canMoveR = canMoveL = true;
 
+        // Game management
         StartSet = true;
+    }
+
+    void OnDestroy()
+    {
+        StartSet = false;
     }
 
     void FixedUpdate()

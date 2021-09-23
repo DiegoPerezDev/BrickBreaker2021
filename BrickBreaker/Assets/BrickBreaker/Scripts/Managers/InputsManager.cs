@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using MyTools;
+using System.Collections;
 
 public class InputsManager : MonoBehaviour
 {
@@ -205,7 +206,19 @@ public class InputsManager : MonoBehaviour
     {
         gameplayInputsDisabled = false;
         DisableTriggers();
-        paddleCode = GameObject.Find("Paddle_").GetComponent<Paddle>();
+        instance.StartCoroutine(SettingCoroutine());
+    }
+
+    private static IEnumerator SettingCoroutine()
+    {
+        GameObject paddle = null;
+        while (paddle == null)
+        {
+            paddle = GameObject.Find("LevelDev/Paddle_(Clone)");
+            yield return new WaitForSecondsRealtime(0.1f);
+        }
+
+        paddleCode = paddle.GetComponent<Paddle>();
         InputsReady = true;
     }
 
@@ -242,10 +255,10 @@ public class InputsManager : MonoBehaviour
             releaseBall = false;
 
             // Release the ball if it hasn't been released
-            if (!LevelManager.ballReleased)
+            if (!Ball.ballReleased)
             {
-                LevelManager.ballReleased = true;
-                GameObject ballGO = SearchTools.TryFind("Ball_");
+                Ball.ballReleased = true;
+                GameObject ballGO = SearchTools.TryFind("Ball_(Clone)");
                 Ball ball = SearchTools.TryGetComponent<Ball>(ballGO);
                 if (ball)
                     ball.ReleaseBall();

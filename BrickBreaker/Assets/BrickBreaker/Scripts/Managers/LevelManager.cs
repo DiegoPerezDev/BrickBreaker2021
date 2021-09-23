@@ -13,19 +13,49 @@ public class LevelManager : MonoBehaviour
 
     // Level data
     public static int numberOfActiveBricks;
-    public static bool ballReleased = false;
+    
     public static int lives;
+
+    // Level objects
+    private static GameObject paddlePref, ballPref, screenBoundsPref;
 
     // Management
     private static LevelManager instance;
     private static IEnumerator setCorroutine;
     public static bool levelReady;
 
+    // Audio
+    public static AudioSource[] brickAudioSources;
+    public static AudioClip hitAudio, destructionAudio;
+
 
     void Awake()
     {
         instance = this;
+
+        // Audio
+        brickAudioSources = GameObject.Find("LevelDev/Bricks_").GetComponents<AudioSource>();
+        hitAudio = SearchTools.TryLoadResource("Audio/Level objects/(gs1) brick getting hit") as AudioClip;
+        destructionAudio = SearchTools.TryLoadResource("Audio/Level objects/(gs1) brick getting crushed") as AudioClip;
+
+        // Prefabs
+        paddlePref = SearchTools.TryLoadResource("Prefabs/LevelDev/Paddle_") as GameObject;
+        ballPref = SearchTools.TryLoadResource("Prefabs/LevelDev/Ball_") as GameObject;
+        screenBoundsPref = SearchTools.TryLoadResource("Prefabs/LevelDev/ScreenBounds") as GameObject;
     }
+
+    void Start()
+    {
+        InstantiateLevelObjects();
+    }
+
+    void OnDestroy()
+    {
+        StopAllCoroutines();
+    }
+
+
+    #region setting functions
 
     /// <summary>
     /// <para> For setting everything for the gameplay level when starting those levels.</para> 
@@ -68,7 +98,6 @@ public class LevelManager : MonoBehaviour
         }
 
         // Set ball
-        ballReleased = false;
         while (!Ball.StartSet)
         {
             yield return null;
@@ -76,18 +105,30 @@ public class LevelManager : MonoBehaviour
 
         // Tell the GameManager this code is ready
         levelReady = true;
-
-        // Restart some values for the next time we enter the gameplay
         setCorroutine = null;
-        ScreenBounds.StartSet = BrickGenerator.StartSet = Paddle.StartSet = Ball.StartSet = false;
     }
+
+    private static void InstantiateLevelObjects()
+    {
+        GameObject paddle = Instantiate(paddlePref, paddlePref.transform.position, Quaternion.identity);
+        paddle.transform.parent = instance.gameObject.transform;
+        paddle.GetComponent<Paddle>().Begin();
+        GameObject ball = Instantiate(ballPref, ballPref.transform.position, Quaternion.identity);
+        ball.transform.parent = instance.gameObject.transform;
+        ball.GetComponent<Ball>().Begin();
+        GameObject screenBounds = Instantiate(screenBoundsPref, screenBoundsPref.transform.position, Quaternion.identity);
+        screenBounds.transform.parent = instance.gameObject.transform;
+        screenBounds.GetComponent<ScreenBounds>().Begin();
+    }
+
+    #endregion
 
     public static void CheckNumberOfBricks()
     {
         
         if (numberOfActiveBricks == 0)
         {
-            Destroy(SearchTools.TryFind("LevelDev/Ball_"));
+            Destroy(SearchTools.TryFind("LevelDev/Ball_(Clone)"));
             GameManager.WinGame();
         }
     }

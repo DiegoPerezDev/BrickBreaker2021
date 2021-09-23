@@ -27,6 +27,11 @@ public class BrickGenerator : MonoBehaviour
         StartSet = true;
     }
 
+    void OnDestroy()
+    {
+        StartSet = false;
+    }
+
 
     private void GetBricksData()
     {

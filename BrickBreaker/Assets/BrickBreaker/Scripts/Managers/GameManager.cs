@@ -22,6 +22,9 @@ public class GameManager : MonoBehaviour
     // Menu management
     public static bool inMenu;
 
+    //Audio
+    private static AudioClip loseAudio, winAudio;
+
     // Scene management
     public enum SceneType { Mainmenu, load, gameplay }
     public static SceneType currentSceneType;
@@ -32,17 +35,23 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         if (instance != null)
-        {
             Destroy(transform.parent.gameObject);
-            return;
-        }
         else
         {
             instance = this;
-            GoToScene(SceneManager.GetActiveScene().buildIndex);
             DontDestroyOnLoad(transform.parent.gameObject);
-            Debug.developerConsoleVisible = true;
         }
+    }
+
+    void Start()
+    {
+        // For debugging purposes
+        GoToScene(SceneManager.GetActiveScene().buildIndex);
+        Debug.developerConsoleVisible = true;
+
+        // Get audio clips
+        loseAudio = SearchTools.TryLoadResource("Audio/Level general/(lg1) lose") as AudioClip;
+        winAudio = SearchTools.TryLoadResource("Audio/Level general/(lg3) win") as AudioClip;
     }
 
     void Update()
@@ -173,7 +182,7 @@ public class GameManager : MonoBehaviour
             case SceneType.gameplay:
                 if (printTransitionStates)
                     print("entering gameplay");
-                instance.StartCoroutine(GameplaySetDelay(scene));
+                instance.StartCoroutine(GameplaySetDelay());
                 break;
 
             default:
@@ -205,7 +214,7 @@ public class GameManager : MonoBehaviour
         loadingScene = false;
         Pause(false);
     }
-
+    
     /// <summary>
     /// <para>Set our scene type depending on the scene index. </para>
     /// <para>This function is just so we can use the 'LoadScene()' easier.</para>
@@ -213,23 +222,12 @@ public class GameManager : MonoBehaviour
     /// <param name="sceneIndex">Unity's scene index of the scene, its place in the 'File/BuildSettings'.</param>
     private static void GetSceneType(int sceneIndex)
     {
-        switch (sceneIndex)
+        currentSceneType = sceneIndex switch
         {
-            // Main menu
-            case 0:
-                currentSceneType = SceneType.Mainmenu;
-                break;
-
-            // Loading screen
-            case 1:
-                currentSceneType = SceneType.load;
-                break;
-
-            // Gameplay scenes
-            default:
-                currentSceneType = SceneType.gameplay;
-                break;
-        }
+            0 => SceneType.Mainmenu,
+            1 => SceneType.load,
+            _ => SceneType.gameplay,
+        };
     }
 
     /// <summary>
@@ -241,7 +239,7 @@ public class GameManager : MonoBehaviour
         Pause(true);
         returnTrigger = pauseTrigger = false;
         inMenu = true;
-        AudioManager.StopLevelSong();
+        AudioManager.StopAllAudio();
     }
 
     #endregion
@@ -292,7 +290,7 @@ public class GameManager : MonoBehaviour
     /// Set a gameplay scene. Only for using it in the 'LoadScene' corroutine.
     /// </summary>
     /// <param name="scene">Which level to go</param>
-    private static IEnumerator GameplaySetDelay(int scene)
+    private static IEnumerator GameplaySetDelay()
     {
         // Set InputsManager
         if (printTransitionStates)
@@ -314,17 +312,7 @@ public class GameManager : MonoBehaviour
         }
         UI_Manager.UI_Ready = false;
 
-        // Set AudioManager
-        if (printTransitionStates)
-            print("Loading... Setting audio");
-        AudioManager.SetGameplay();
-        while (!AudioManager.audioReady)
-        {
-            yield return null;
-        }
-        AudioManager.audioReady = false;
-
-        // Set Level
+        // Set LevelManager
         if (printTransitionStates)
             print("Loading... Level");
         LevelManager.SetGameplay();
@@ -352,12 +340,12 @@ public class GameManager : MonoBehaviour
         if (pausing)
         {
             UI_Manager.SwitchPanel(UI_Manager.Panels.pause, true);
-            AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.pause], false);
+            AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.pause], false, 1f);
         }
         else
         {
             UI_Manager.ReturnToPreviousPanel();
-            AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.unPause], false);
+            AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.unPause], false, 1f);
             InputsManager.DisableTriggers();
         }
         InputsManager.gameplayInputsDisabled = pausing;
@@ -391,6 +379,8 @@ public class GameManager : MonoBehaviour
         Pause(true);
         inMenu = true;
         inGameplay = false;
+        AudioManager.StopLevelSong();
+        AudioManager.PlayAudio(AudioManager.GameAudioSource, loseAudio, false, 1f);
         UI_Manager.SwitchPanel(UI_Manager.Panels.lose, true);
     }
 
@@ -403,6 +393,8 @@ public class GameManager : MonoBehaviour
         Pause(true);
         inMenu = true;
         inGameplay = false;
+        AudioManager.StopLevelSong();
+        AudioManager.PlayAudio(AudioManager.GameAudioSource, winAudio, false, 1f);
         UI_Manager.SwitchPanel(UI_Manager.Panels.win, true);
     }
 

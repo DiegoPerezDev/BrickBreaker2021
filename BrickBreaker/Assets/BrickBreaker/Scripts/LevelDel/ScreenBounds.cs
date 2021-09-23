@@ -1,18 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MyTools;
 
 public class ScreenBounds : MonoBehaviour
 {
     /*
      * NOTES:
-     * This code place the screen colliders bounds so the ball cannot get outside of the scrreen view.
+     * This code place the screen colliders bounds so the ball cannot get outside of the screen view.
      */
 
     // Screen bounds objects
-    private enum Bounds { leftBound, topBound, rightBound }
-    private Bounds bounds;
-    private GameObject leftBound, rightBound, topBound;
+    private GameObject leftBound, rightBound, topBound, bottomBound;
     private readonly float boundThickness = 1f;
 
     // Screen and camera info
@@ -24,13 +23,18 @@ public class ScreenBounds : MonoBehaviour
     public static bool StartSet;
 
 
-    void Start()
+    public void Begin()
     {
         GetScreenValues();
-        GetBoundObjects();
+        CreateBoundObjects();
         ResizeBoundObjects();
         PlaceBoundObjects();
         StartSet = true;
+    }
+
+    void OnDestroy()
+    {
+        StartSet = false;
     }
 
 
@@ -46,81 +50,40 @@ public class ScreenBounds : MonoBehaviour
         bottomScreenLimit = camPos.y - (camHeight / 2);
     }
 
-    private void GetBoundObjects()
+    private void CreateBoundObjects()
     {
-        switch(this.gameObject.name)
-        {
-            case "TopCollider_":
-                bounds = Bounds.topBound;
-                topBound = GameObject.Find("LevelDev/TopCollider_");
-                if(topBound == null)
-                {
-                    print("topBound game object was not found!");
-                    Destroy(this);
-                }
-                break;
+        topBound = new GameObject("TopBound");
+        topBound.AddComponent<BoxCollider2D>();
+        topBound.transform.parent = gameObject.transform;
 
-            case "LeftCollider_":
-                bounds = Bounds.leftBound;
-                leftBound = GameObject.Find("LevelDev/LeftCollider_");
-                if (leftBound == null)
-                {
-                    print("leftBound game object was not found!");
-                    Destroy(this);
-                }
-                break;
+        bottomBound = new GameObject("BottomBound");
+        bottomBound.AddComponent<BoxCollider2D>();
+        bottomBound.tag = "BottomBound";
+        bottomBound.transform.parent = gameObject.transform;
 
-            case "RightCollider_":
-                bounds = Bounds.rightBound;
-                rightBound = GameObject.Find("LevelDev/RightCollider_");
-                if (rightBound == null)
-                {
-                    print("rightBound game object was not found!");
-                    Destroy(this);
-                }
-                break;
+        leftBound = new GameObject("LeftBound");
+        leftBound.AddComponent<BoxCollider2D>();
+        leftBound.transform.parent = gameObject.transform;
 
-            default:
-                print("Background object not recognized!");
-                Destroy(this);
-                break;
-        }
+        rightBound = new GameObject("RightBound");
+        rightBound.AddComponent<BoxCollider2D>();
+        rightBound.transform.parent = gameObject.transform;
     }
 
     private void ResizeBoundObjects()
     {
-        switch(bounds)
-        {
-            case Bounds.topBound:
-                topBound.transform.localScale = new Vector3(camWidth, boundThickness, topBound.transform.localScale.z);
-                break;
-
-            case Bounds.leftBound:
-                leftBound.transform.localScale = new Vector3(boundThickness, topScreenLimit - bottomScreenLimit,  leftBound.transform.localScale.z);
-                break;
-
-            case Bounds.rightBound:
-                rightBound.transform.localScale = new Vector3(boundThickness, topScreenLimit - bottomScreenLimit, rightBound.transform.localScale.z);
-                break;
-        }
+        topBound.transform.localScale = new Vector3(camWidth, boundThickness, topBound.transform.localScale.z);
+        bottomBound.transform.localScale = new Vector3(camWidth, boundThickness, bottomBound.transform.localScale.z);
+        leftBound.transform.localScale = new Vector3(boundThickness, topScreenLimit - bottomScreenLimit,  leftBound.transform.localScale.z);
+        rightBound.transform.localScale = new Vector3(boundThickness, topScreenLimit - bottomScreenLimit, rightBound.transform.localScale.z);
     }
 
     private void PlaceBoundObjects()
     {
-        switch (bounds)
-        {
-            case Bounds.topBound:
-                topBound.transform.position = new Vector3(camPos.x, topScreenLimit + boundThickness/2, topBound.transform.position.z);
-                break;
-
-            case Bounds.leftBound:
-                leftBound.transform.position = new Vector3(leftScreenLimit - boundThickness / 2, camPos.y, leftBound.transform.position.z);
-                break;
-
-            case Bounds.rightBound:
-                rightBound.transform.position = new Vector3(rightScreenLimit + boundThickness / 2, camPos.y, rightBound.transform.position.z);
-                break;
-        }
+        topBound.transform.position = new Vector3(camPos.x, topScreenLimit + boundThickness/2, topBound.transform.position.z);
+        bottomBound.transform.position = new Vector3(camPos.x, bottomScreenLimit - boundThickness, bottomBound.transform.position.z);
+        leftBound.transform.position = new Vector3(leftScreenLimit - boundThickness / 2, camPos.y, leftBound.transform.position.z);
+        rightBound.transform.position = new Vector3(rightScreenLimit + boundThickness / 2, camPos.y, rightBound.transform.position.z);
     }
 
 }

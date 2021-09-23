@@ -21,6 +21,7 @@ public class UI_Manager : MonoBehaviour
 
     // For transition management
     public static bool UI_Ready;
+    private static UI_Manager instance;
 
     // For panel management
     [HideInInspector] public enum Panels { none, mainmenu, settings, inputs, HUD, messages, pause, lose, win }
@@ -37,11 +38,10 @@ public class UI_Manager : MonoBehaviour
     private readonly static Button[] firstMenuButton = new Button[Enum.GetNames(typeof(Panels)).Length];
     private static EventSystem eventSystem;
 
-    // For FPS management
-    private static UI_Manager instance;
-    private static TextMeshProUGUI FPStmp;
-    private static int fps;
-    private static IEnumerator fpsCorroutine;
+    // Audio
+    private static AudioSource audioSource;
+    [HideInInspector] public enum UiAudioNames { button, pause, unPause }
+    public static AudioClip[] uiClips = new AudioClip[Enum.GetNames(typeof(UiAudioNames)).Length];
     
 
     // - - - - GAMEPLAY - - - -
@@ -52,16 +52,21 @@ public class UI_Manager : MonoBehaviour
 
     void Awake()
     {
-        // Singleton
-        if (instance == null)
-            instance = this;
-        else
+        if (instance != null)
+        {
             Destroy(this);
-    }
+            return;
+        }
 
-    void Update()
-    {
-        fps++;
+        instance = this;
+
+        // UI audio
+        audioSource = SearchTools.TryGetComponent<AudioSource>(this.gameObject);
+        string[] uiClipsPaths = { "(UI1) button", "(UI2) Pause", "(UI3) UnPause" };
+        foreach (UiAudioNames audioClip in Enum.GetValues(typeof(UiAudioNames)))
+        {
+            uiClips[(int)audioClip] = SearchTools.TryLoadResource($"Audio/UI/{uiClipsPaths[(int)audioClip]}") as AudioClip;
+        }
     }
 
 
@@ -255,7 +260,7 @@ public class UI_Manager : MonoBehaviour
     private static void TryReturnToPreviousPanel<T>(T activePanel, GameObject[] panelGameObject, bool closePrevPanel, T previousPanel)
     {
         // Audio
-        AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.button], false);
+        AudioManager.PlayAudio(audioSource, uiClips[(int)UiAudioNames.button], false, 1f);
 
         // Open previus panel
         if(closePrevPanel)
@@ -294,21 +299,6 @@ public class UI_Manager : MonoBehaviour
         // Select the first button of the active panel
         if(firstMenuButton[(int)activeMenus[currentMenuLayer]])
             firstMenuButton[(int)activeMenus[currentMenuLayer]].Select();
-    }
-
-    #endregion
-
-    #region FPS management
-
-    /// <summary>
-    /// The counting of the frames per second so we can know the performance of the game on build.
-    /// </summary>
-    private static IEnumerator FPS_Count()
-    {
-        yield return new WaitForSecondsRealtime(1f);
-        FPStmp.text = $"FPS: {fps}";
-        fps = 0;
-        instance.StartCoroutine(FPS_Count());
     }
 
     #endregion
@@ -355,6 +345,45 @@ public class UI_Manager : MonoBehaviour
     #endregion
 
     #region Button functions
+
+    /// <summary>
+    /// This triggers the action when clicking a button from the main menu.
+    /// </summary>
+    private static void MainMenuButtonsActions(string button)
+    {
+        AudioManager.PlayAudio(audioSource, uiClips[(int)UiAudioNames.button], false, 1f);
+        button = button.ToLower();
+        button = button.Trim();
+
+        switch (button)
+        {
+            case "play":
+                GameManager.GoToScene(2);
+                break;
+
+            case "settings":
+                SwitchPanel(Panels.settings, true);
+                break;
+
+            case "inputs":
+                SwitchPanel(Panels.inputs, true);
+                break;
+
+            case "return":
+                ReturnToPreviousPanel();
+                break;
+
+            case "quit":
+                print("quitting application");
+                Application.Quit();
+                break;
+
+            default:
+                print("Wrong use of the MainMenu buttons function");
+                Debug.Break();
+                break;
+        }
+    }
 
     /// <summary>
     /// This assing the event when clicking the buttons for the main menu, so we dont have to do it manually in the inspector every time we start a new game.
@@ -430,45 +459,6 @@ public class UI_Manager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// This triggers the action when clicking a button from the main menu.
-    /// </summary>
-    private static void MainMenuButtonsActions(string button)
-    {
-        AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.button], false);
-        button = button.ToLower();
-        button = button.Trim();
-
-        switch (button)
-        {
-            case "play":
-                GameManager.GoToScene(2);
-                break;
-
-            case "settings":
-                SwitchPanel(Panels.settings, true);
-                break;
-
-            case "inputs":
-                SwitchPanel(Panels.inputs, true);
-                break;
-
-            case "return":
-                ReturnToPreviousPanel();
-                break;
-
-            case "quit":
-                print("quitting application");
-                Application.Quit();
-                break;
-
-            default:
-                print("Wrong use of the MainMenu buttons function");
-                Debug.Break();
-                break;
-        }
-    }
-
     #endregion
 
 
@@ -516,9 +506,7 @@ public class UI_Manager : MonoBehaviour
         }
 
         // Get gameplay 'inplay' components
-        GameObject FPStmpGO = SearchTools.TryFindInGameobject(panelGO[(int)Panels.HUD], "FPS");
         GameObject lifeTmpGO = SearchTools.TryFindInGameobject(panelGO[(int)Panels.HUD], "Life");
-        FPStmp = SearchTools.TryGetComponent<TextMeshProUGUI>(FPStmpGO);
         lifeTmp = SearchTools.TryGetComponent<TextMeshProUGUI>(lifeTmpGO);
     }
 
@@ -544,6 +532,59 @@ public class UI_Manager : MonoBehaviour
     #endregion
 
     #region Button functions
+
+    /// <summary>
+    /// This triggers the action when clicking a button from the pause menu in gameplay.
+    /// </summary>
+    private static void PauseMenuButtonsActions(string button)
+    {
+        button = button.ToLower();
+        button = button.Trim();
+
+        switch (button)
+        {
+            case "continue":
+                GameManager.returnTrigger = true;
+                AudioManager.PlayAudio(audioSource, uiClips[(int)UiAudioNames.unPause], false, 1f);
+                return;
+
+            case "settings":
+                SwitchPanel(Panels.settings, true);
+                break;
+
+            case "inputs":
+                SwitchPanel(Panels.inputs, true);
+                break;
+
+            case "return":
+                ReturnToPreviousPanel();
+                break;
+
+            case "quit":
+                print("quit application");
+                AudioManager.PlayAudio(audioSource, uiClips[(int)UiAudioNames.button], false, 1f);
+                Application.Quit();
+                return;
+
+            case "restart":
+                GameManager.GoToScene(SceneManager.GetActiveScene().buildIndex);
+                break;
+
+            case "nextlevel":
+                GameManager.GoToScene(SceneManager.GetActiveScene().buildIndex + 1);
+                break;
+
+            case "mainmenu":
+                GameManager.GoToScene(0);
+                break;
+
+            default:
+                print("attempt didn't work");
+                return;
+        }
+
+        AudioManager.PlayAudio(audioSource, uiClips[(int)UiAudioNames.button], false, 1f);
+    }
 
     /// <summary>
     /// This assing the event when clicking the buttons for the gameplay menus, so we dont have to do it manually in the inspector every time we start a new game.
@@ -667,59 +708,6 @@ public class UI_Manager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// This triggers the action when clicking a button from the pause menu in gameplay.
-    /// </summary>
-    private static void PauseMenuButtonsActions(string button)
-    {
-        button = button.ToLower();
-        button = button.Trim();
-
-        switch (button)
-        {
-            case "continue":
-                GameManager.returnTrigger = true;
-                AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.unPause], false);
-                return;
-
-            case "settings":
-                SwitchPanel(Panels.settings, true);
-                break;
-
-            case "inputs":
-                SwitchPanel(Panels.inputs, true);
-                break;
-
-            case "return":
-                ReturnToPreviousPanel();
-                break;
-
-            case "quit":
-                print("quit application");
-                AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.button], false);
-                Application.Quit();
-                break;
-
-            case "restart":
-                GameManager.GoToScene(SceneManager.GetActiveScene().buildIndex);
-                break;
-
-            case "nextlevel":
-                GameManager.GoToScene(SceneManager.GetActiveScene().buildIndex + 1);
-                break;
-
-            case "mainmenu":
-                GameManager.GoToScene(0);
-                break;
-
-            default:
-                print("attempt didn't work");
-                break;
-        }
-
-        AudioManager.PlaySFX(AudioManager.generalAudioSource, AudioManager.uiClips[(int)AudioManager.UiAudioNames.button], false);
-    }
-
     #endregion
 
     #region HUD
@@ -729,12 +717,6 @@ public class UI_Manager : MonoBehaviour
         // Life
         if (lifeTmp != null)
             lifeTmp.text = "Life: " + LevelManager.lives;
-
-        if(fpsCorroutine == null)
-        {
-            fpsCorroutine = FPS_Count();
-            instance.StartCoroutine(fpsCorroutine);
-        }
     }
 
     public static void RewriteLife()
