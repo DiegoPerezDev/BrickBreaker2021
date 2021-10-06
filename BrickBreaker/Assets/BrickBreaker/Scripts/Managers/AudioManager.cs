@@ -2,12 +2,14 @@ using UnityEngine;
 using System;
 using UnityEngine.SceneManagement;
 using MyTools;
+using UnityEngine.Audio;
 
 public class AudioManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
     - This class manage all the audio in the game, both music and sfx, for all scenes.
+    - Any code from any scenetype can call the mothods of this class.
     */
 
 
@@ -21,6 +23,9 @@ public class AudioManager : MonoBehaviour
     private static AudioSource musicSource;
     private static AudioClip[] songsClips = new AudioClip[1];
 
+    // SFX Managerment
+    private static AudioMixerGroup sfxMixer;
+
 
     void Awake()
     {
@@ -30,7 +35,6 @@ public class AudioManager : MonoBehaviour
         {
             instance = this;
             FindResources();
-            print("falta una parte de este codigo, buscar el otro print");
         }
     }
 
@@ -41,6 +45,9 @@ public class AudioManager : MonoBehaviour
 
     private void FindResources()
     {
+        // Get audio mixers
+        sfxMixer = SearchTools.TryLoadResource("Audio/SFX_Mixer") as AudioMixerGroup;
+
         // Get audio sources
         var sfxChild = instance.gameObject.transform.GetChild(0);
         GameAudioSource = SearchTools.TryGetComponent<AudioSource>(sfxChild.gameObject);
@@ -66,7 +73,7 @@ public class AudioManager : MonoBehaviour
     /// <para>Try to play a certain sfx in a specific audio source.</para> 
     /// <para>If there is another clip playing in one of this sources then go to the next audio source to play the next clip, never stop the other when using this method.</para> 
     /// </summary>
-    public static void PlayAudio(ref AudioSource[] sources, AudioClip clip, GameObject objectOfSources, bool inLoop, float volume)
+    public static void PlayAudio_WithoutInterruption(ref AudioSource[] sources, AudioClip clip, GameObject objectOfSources, bool inLoop, float volume)
     {
         AudioSource source = null;
 
@@ -88,8 +95,7 @@ public class AudioManager : MonoBehaviour
                 {
                     Array.Resize(ref sources, sources.Length + 1);
                     sources[i + 1] = objectOfSources.AddComponent<AudioSource>();
-                    print("falta esta siguiente linea");
-                    //sources[i + 1].outputAudioMixerGroup = ;
+                    sources[i + 1].outputAudioMixerGroup = sfxMixer;
                     source = sources[i + 1];
                     goto Play;
                 }
@@ -180,7 +186,7 @@ public class AudioManager : MonoBehaviour
     public static void PlayLevelSong(int actualScene)
     {
         //Look if we have the clip, if not then dont play the music
-        if (!songsClips[actualScene])
+        if (!songsClips[actualScene] && (actualScene != 1))
         {
             print("song clip not found for scene index: " + actualScene);
             return;
@@ -190,7 +196,7 @@ public class AudioManager : MonoBehaviour
         if (actualScene == 0)
             musicSource.volume = 1f;
         else if (actualScene > 1)
-            musicSource.volume = 0.18f;
+            musicSource.volume = 0.2f;
 
         // Select level song
         musicSource.clip = songsClips[actualScene];
@@ -214,10 +220,7 @@ public class AudioManager : MonoBehaviour
     public static void StopAllGeneralSFX()
     {
         if (GameAudioSource == null)
-        {
-            print("dont have musicSource here");
             return;
-        }
         if (GameAudioSource.isPlaying)
             GameAudioSource.Stop();
     }
@@ -228,10 +231,7 @@ public class AudioManager : MonoBehaviour
     public static void StopLevelSong()
     {
         if (musicSource == null)
-        {
-            print("dont have musicSource here");
             return;
-        }
         if (musicSource.isPlaying)
             musicSource.Stop();
     }

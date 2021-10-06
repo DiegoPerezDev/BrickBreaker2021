@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Brick
   - BottomBound
+  - SlowPower
+  - FastPower
+  - ShortPower
+  - LargePower
   layers:
   - Default
   - TransparentFX
@@ -13,7 +17,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - ScreenBounds
   - 
   - 
   - 

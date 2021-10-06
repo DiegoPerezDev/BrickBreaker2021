@@ -11,24 +11,23 @@ public class Bricks : MonoBehaviour
     [Tooltip("With this number we can know which sprite to use when the brick is breaking and also the type of brick.")]
     [Range(1,7)] [SerializeField] int brickNum = 2;
     private int currentLife;
+    private IEnumerator animCorroutine;
+    private Vector2 startPos;
 
     // Breaking brick
     private Sprite brokenBrickSprite;
     private SpriteRenderer spriteRenderer;
     private bool brickBroken;
     private GameObject breakAnimationPref;
-    //Color normalColor;
-    //IEnumerator animCorroutine;
 
 
     void Awake()
     {
+        startPos = transform.position;
         spriteRenderer = GetComponent<SpriteRenderer>();
-        //normalColor = spriteRenderer.color;
         if ( (brickNum > 1) && (brickNum < 6) )
-            brokenBrickSprite = Resources.Load<Sprite>($"BrokenBricks/Brick0{brickNum}");
-
-        breakAnimationPref = Resources.Load<GameObject>($"Prefabs/Bricks/Brick0{brickNum}_ParticleSystem");
+            brokenBrickSprite = Resources.Load<Sprite>($"Art2D/BrokenBricks/Brick0{brickNum}");
+        breakAnimationPref = Resources.Load<GameObject>($"Prefabs/LevelDev/Bricks/Brick0{brickNum}_ParticleSystem");
     }
 
     void Start()
@@ -46,7 +45,10 @@ public class Bricks : MonoBehaviour
     {
         // Check if one of the indestructible bricks
         if (brickNum > 6)
+        {
+            AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.metalHitAudio, transform.parent.gameObject, false, 0.35f);
             return;
+        }
 
         // substract life from the brick
         currentLife--;
@@ -54,14 +56,14 @@ public class Bricks : MonoBehaviour
         // Change the brick sprite to another that looks breaking when the brick reach half of its life
         if (currentLife > 0)
         {
-            AudioManager.PlayAudio(ref LevelManager.brickAudioSources, LevelManager.hitAudio, transform.parent.gameObject, false, 0.75f);
+            AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.hitAudio, transform.parent.gameObject, false, 0.7f);
 
-            // Blink animation in the brick when hit
-            //if (animCorroutine == null)
-            //{
-            //    animCorroutine = brickHitFeedback();
-            //    StartCoroutine(animCorroutine);
-            //}
+            // Animation of the brick when hit
+            if (animCorroutine == null)
+            {
+                animCorroutine = BrickHitFeedback();
+                StartCoroutine(animCorroutine);
+            }
 
             // Apply the brocken brick sprite if its case
             if (!brickBroken)
@@ -76,33 +78,64 @@ public class Bricks : MonoBehaviour
         // Destroy this brick and substract if in the 'LevelManager' when life = 0
         else if(currentLife == 0)
         {
-            AudioManager.PlayAudio(ref LevelManager.brickAudioSources, LevelManager.destructionAudio, transform.parent.gameObject, false, 0.7f);
+            AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.destructionAudio, transform.parent.gameObject, false, 0.7f);
             Instantiate(breakAnimationPref, transform.position, Quaternion.identity);
             LevelManager.numberOfActiveBricks--;
+            MaySpawnPower();
             Destroy(gameObject);
         }
     }
 
-    /*
-    private IEnumerator brickHitFeedback()
+    private void MaySpawnPower()
     {
-        print("started");
+        // Chance to spawn a power
+        if ((Random.Range(0, 100)) > 10)
+            return;
 
-        // "blink" animation of the brick when it gets hit
-        for (int j = 0; j < 3; j++)
+        // Spawn random power
+        int power = Random.Range(1, 4);
+        GameObject powerToSpawn = null;
+        string path = "Prefabs/LevelDev/Powers";
+        switch (power)
         {
-            float delay = 0;
-            while (delay < 1f)
-            {
-                yield return null;
-                delay += Time.deltaTime;
-                spriteRenderer.color = Color.Lerp(normalColor, normalColor - new Color(100/255f, 100 / 255f, 100 / 255f, 0), Mathf.PingPong(Time.time, delay));
-            }
-        }
-        //spriteRenderer.color
+            case 1:
+                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerFast");
+                break;
 
-        print("ended");
-        //animCorroutine = null;
+            case 2:
+                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerSlow");
+                break;
+
+            case 3:
+                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerShort");
+                break;
+
+            case 4:
+                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerLarge");
+                break;
+        } 
+        if(powerToSpawn != null)
+            Instantiate(powerToSpawn, transform.position, Quaternion.identity);
     }
-    */
+
+    private IEnumerator BrickHitFeedback()
+    {
+        // Brick vibration for a certain time
+        float speed = 15f;
+        float amount = 0.03f;
+        float delay = 0f;
+        while(delay < 0.2f)
+        {
+            yield return null;
+            delay += Time.deltaTime;
+            float formula = Mathf.Sin(delay * 8 * speed) * amount;
+            transform.position = startPos + new Vector2(formula, formula);
+        }
+
+        // Go back to the normal position
+        transform.position = startPos;
+
+        animCorroutine = null;
+    }
+
 }

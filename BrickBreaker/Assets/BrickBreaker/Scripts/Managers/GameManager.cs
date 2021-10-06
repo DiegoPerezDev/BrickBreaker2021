@@ -8,28 +8,20 @@ public class GameManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
-    - This class manage the scene transitions, the pausing and other things in game that happen in more than one scene type (for exaple gameplay but also main menu).
+        This class manages:
+    - The general game save and load (using other saving codes).
+    - The scene transitions.
+    - The scene set for the transitions.
     */
 
-
-    // General stuff
+    // General data
     private static GameManager instance;
-    public static bool inGameplay, gamePaused;
-
-    // Inputs
-    public static bool returnTrigger, pauseTrigger;
-
-    // Menu management
-    public static bool inMenu;
-
-    //Audio
-    private static AudioClip loseAudio, winAudio;
 
     // Scene management
     public enum SceneType { Mainmenu, load, gameplay }
     public static SceneType currentSceneType;
     public static bool loadingScene, settingScene;
-    private static readonly bool printTransitionStates = false;
+    [SerializeField] private bool printTransitionStates;
 
 
     void Awake()
@@ -45,79 +37,16 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Load data
+        StartCoroutine(LoadGameData());
+
         // For debugging purposes
-        GoToScene(SceneManager.GetActiveScene().buildIndex);
         Debug.developerConsoleVisible = true;
 
-        // Get audio clips
-        loseAudio = SearchTools.TryLoadResource("Audio/Level general/(lg1) lose") as AudioClip;
-        winAudio = SearchTools.TryLoadResource("Audio/Level general/(lg3) win") as AudioClip;
+        // Open scene
+        GoToScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    void Update()
-    {
-        if(!loadingScene)
-            MenuManagement();
-
-        // For debugging purposes
-        //print(gamePaused);
-    }
-
-
-    // - - - - MAIN MANAGEMENT - - - -
-
-    #region Menu management
-
-    /// <summary>
-    /// This is a state machine that manage the menu and the pause behaviour for it.
-    /// </summary>
-    private void MenuManagement()
-    {
-        // Return to previous menu
-        if (returnTrigger)
-        {
-            returnTrigger = false;
-
-            // Unpause and close menu on gameplay if we are at the first pause menu layer, else just return to the previous menu.
-            if (inMenu)
-            {
-                if ( (currentSceneType == SceneType.gameplay) && UI_Manager.inPauseMenuFirstLayer)
-                {
-                    pauseTrigger = false;
-                    PauseMenu(false);
-                }
-                // Return to the previous menu if we are not in these panels:
-                // win, lose, pause, main menu or none
-                else if(UI_Manager.currentMenuLayer > 1)
-                {
-                    UI_Manager.ReturnToPreviousPanel();
-                }
-            }
-        }
-
-        // Pause management
-        if (currentSceneType == SceneType.gameplay)
-        {
-            if (pauseTrigger)
-            {
-                pauseTrigger = false;
-
-                // If i am at the first pause menu layer, unpause the game, else pause it.
-                if (inMenu)
-                {
-                    if (UI_Manager.inPauseMenuFirstLayer)
-                        PauseMenu(false);
-                }
-                else
-                {
-                    PauseMenu(true);
-                    InputsManager.DisableTriggers();
-                }
-            }
-        }
-    }
-
-    #endregion
 
     #region Transition functions
 
@@ -141,20 +70,23 @@ public class GameManager : MonoBehaviour
     {
         // Set some things first
         loadingScene = true;
-        ResetGameManager();
+        UI_Manager.inMenu = true;
+        AudioManager.StopAllAudio();
 
         // Go to the loading scene
-        if(printTransitionStates)
+        if(instance.printTransitionStates)
             print("Loading... Entering loading scene");
         currentSceneType = SceneType.load;
         AsyncOperation loadingOperation1 = SceneManager.LoadSceneAsync(1);
+        AudioManager.PlayLevelSong(1);
         while (!loadingOperation1.isDone)
         {
             yield return null;
         }
+        AudioManager.StopLevelSong();
 
         // Go to the desired scene
-        if (printTransitionStates)
+        if (instance.printTransitionStates)
             print("Loading... Entering desired scene");
         AsyncOperation loadingOperation2 = SceneManager.LoadSceneAsync(scene);
         while (!loadingOperation2.isDone)
@@ -162,25 +94,26 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        //Get the sceneType and then set the scene depending on the type of scene
+        //Get the sceneType and then set the scene
         GetSceneType(scene);
         settingScene = true;
+        if (instance.printTransitionStates)
+            print("Loading... Setting scene");
 
-        switch(currentSceneType)
+        switch (currentSceneType)
         {
             case SceneType.Mainmenu:
-                if (printTransitionStates)
+                if (instance.printTransitionStates)
                     print("entering main menu");
                 instance.StartCoroutine(MainmenuSetDelay());
                 break;
 
             case SceneType.load:
-                if (printTransitionStates)
-                    print("entering loading screen");
-                goto LoadingEnd;
+                print("Going directly to the loading scene should only happen testing the loading scene in development.");
+                yield break;
 
             case SceneType.gameplay:
-                if (printTransitionStates)
+                if (instance.printTransitionStates)
                     print("entering gameplay");
                 instance.StartCoroutine(GameplaySetDelay());
                 break;
@@ -189,14 +122,12 @@ public class GameManager : MonoBehaviour
                 print("Didn't recognice the scene to load. Check the build index you'r trying to access");
                 yield break;
         }
-        if (printTransitionStates)
-            print("Loading... Setting scene");
         while (settingScene)
         {
             yield return null;
         }
 
-        // Last settings for main menu and gameplay scenes
+        // Close the loading frame after setting all the scene.
         try
         {
             Destroy(GameObject.Find("UI/UI_Loading"));
@@ -207,12 +138,11 @@ public class GameManager : MonoBehaviour
             Debug.Break();
         }
 
-        LoadingEnd:
-        AudioManager.PlayLevelSong(scene);
-        if (printTransitionStates)
-            print("Scene loaded!");
-        loadingScene = false;
-        Pause(false);
+        // Start the scene.
+        //      Dont start the gameplay scene after scene set because we still want to wait for the level introduction frame delay.
+        //      Call the StartScene method in the LevelManager for the gameplay scene type.
+        if (currentSceneType == SceneType.Mainmenu)
+            StartScene(scene);
     }
     
     /// <summary>
@@ -230,61 +160,47 @@ public class GameManager : MonoBehaviour
         };
     }
 
-    /// <summary>
-    /// <para>Restart some of this code values when loading a new scene.</para>
-    /// <para>This function is just so we can use the 'LoadScene()' easier.</para>
-    /// </summary>
-    private static void ResetGameManager()
+    public static void StartScene(int scene)
     {
-        Pause(true);
-        returnTrigger = pauseTrigger = false;
-        inMenu = true;
-        AudioManager.StopAllAudio();
+        AudioManager.PlayLevelSong(scene);
+        
+        InputsManager.DisableTriggers();
+        loadingScene = false;
+        if (instance.printTransitionStates)
+            print("Scene loaded!");
     }
 
     #endregion
 
-
-    // - - - - MAIN MENU - - - -
-
-    #region Start functions
+    #region Scene start settings
 
     /// <summary>
     /// Set the main menu scene. Only for using it in the 'LoadScene' corroutine.
     /// </summary>
     private static IEnumerator MainmenuSetDelay()
     {
-        // Set GameManager
-        inMenu = true;
+        UI_Manager.inMenu = true;
 
         // Set InputManager
         InputsManager.gameplayInputsDisabled = true;
 
-        // Set UIManager
-        if (printTransitionStates)
+        // Set UI
+        if (instance.printTransitionStates)
             print("Loading... Setting UI");
-        UI_Manager.SetMainmenu();
-        while (!UI_Manager.UI_Ready)
+        while (!MainMenu.ready)
         {
             yield return null;
         }
-        UI_Manager.UI_Ready = false;
+        MainMenu.ready = false;
 
         // Set AudioManager
-        if (printTransitionStates)
+        if (instance.printTransitionStates)
             print("Loading... Setting audio");
         // (Nothing for now)
 
         // Finish
         settingScene = false;
     }
-
-    #endregion
-
-
-    // - - - - - GAMEPLAY - - - - -
-
-    #region Start functions
 
     /// <summary>
     /// Set a gameplay scene. Only for using it in the 'LoadScene' corroutine.
@@ -293,7 +209,7 @@ public class GameManager : MonoBehaviour
     private static IEnumerator GameplaySetDelay()
     {
         // Set InputsManager
-        if (printTransitionStates)
+        if (instance.printTransitionStates)
             print("Loading... Setting Inputs");
         InputsManager.SetGameplay();
         while (!InputsManager.InputsReady)
@@ -303,17 +219,16 @@ public class GameManager : MonoBehaviour
         InputsManager.InputsReady = false;
 
         // Set UI_Manager
-        if (printTransitionStates)
+        if (instance.printTransitionStates)
             print("Loading... Setting UI");
-        UI_Manager.SetGameplay();
-        while (!UI_Manager.UI_Ready)
+        while (!GameplayMenu.ready)
         {
             yield return null;
         }
-        UI_Manager.UI_Ready = false;
+        GameplayMenu.ready = false;
 
         // Set LevelManager
-        if (printTransitionStates)
+        if (instance.printTransitionStates)
             print("Loading... Level");
         LevelManager.SetGameplay();
         while (!LevelManager.levelReady)
@@ -323,79 +238,46 @@ public class GameManager : MonoBehaviour
         LevelManager.levelReady = false;
 
         // Finish
-        inMenu = false;
-        inGameplay = true;
+        UI_Manager.inMenu = false;
         settingScene = false;
+        //LevelManager.Pause(false);
     }
 
     #endregion
 
-    #region Pause management
+    #region saving & loading general game data
 
-    /// <summary>
-    /// Open or close the pause menu on a gameplay scene. Also manage the real pausing in each case. For just pausing without UI changing use the 'Pause()' method.
-    /// </summary>
-    private static void PauseMenu(bool pausing)
+    public static void SaveGameData(bool newRecord, int currentLevel)
     {
-        if (pausing)
+        // Another level done if i havent done this specific level yet
+        if (LevelManager.levelsDone[currentLevel - 1] == false)
         {
-            UI_Manager.SwitchPanel(UI_Manager.Panels.pause, true);
-            AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.pause], false, 1f);
+            LevelManager.levelsDone[currentLevel - 1] = true;
+            LevelManager.levelsUnlocked++;
         }
-        else
+
+        // if new record, then save new record and show it in the UI
+        if (newRecord)
+            LevelManager.levelsScore[currentLevel - 1] = LevelManager.lives;
+
+        SaveSystem.SaveLevelData();
+    }
+
+    public static IEnumerator LoadGameData()
+    {
+        float delay = 0;
+        while (delay < 0.2f)
         {
-            UI_Manager.ReturnToPreviousPanel();
-            AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.unPause], false, 1f);
-            InputsManager.DisableTriggers();
+            yield return null;
+            delay += Time.deltaTime;
         }
-        InputsManager.gameplayInputsDisabled = pausing;
-        inMenu = pausing;
-        Pause(pausing);
-    }
 
-    /// <summary>
-    /// Pause or unpause the game without changing the menus.
-    /// </summary>
-    /// <param name="enable"></param>
-    private static void Pause(bool enable)
-    {
-        gamePaused = enable;
-        if (enable)
-            Time.timeScale = 0;
-        else
-            Time.timeScale = 1;
-    }
-
-    #endregion
-
-    #region Win and Lose 
-
-    /// <summary>
-    /// What happens when losing the game. Call it in another code that triggers the losing.
-    /// </summary>
-    public static void LoseGame()
-    {
-        print("game lost");
-        Pause(true);
-        inMenu = true;
-        inGameplay = false;
-        AudioManager.StopLevelSong();
-        AudioManager.PlayAudio(AudioManager.GameAudioSource, loseAudio, false, 1f);
-        UI_Manager.SwitchPanel(UI_Manager.Panels.lose, true);
-    }
-
-    /// <summary>
-    /// What happens when winning the game. Call it in another code that triggers the winning.
-    /// </summary>
-    public static void WinGame()
-    {
-        print("game won");
-        Pause(true);
-        inMenu = true;
-        inGameplay = false;
-        AudioManager.StopLevelSong();
-        AudioManager.PlayAudio(AudioManager.GameAudioSource, winAudio, false, 1f);
-        UI_Manager.SwitchPanel(UI_Manager.Panels.win, true);
+        SaveSystem.LoadLevelData();
+        if (LevelManager.levelsUnlocked > 1)
+        {
+            for (int i = 0; i < LevelManager.levelsUnlocked; i++)
+                LevelManager.levelsDone[i] = true;
+        }
     }
 
     #endregion

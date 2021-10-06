@@ -16,14 +16,29 @@ EditorBuildSettings:
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 1
     path: Assets/BrickBreaker/Scenes/Level2.unity
-    guid: cbe20367791162c47beee45481b759e4
+    guid: 8c9ab90a229b21f4ebb0b04618297f6f
   - enabled: 1
     path: Assets/BrickBreaker/Scenes/Level3.unity
-    guid: 6fd2fb25d1d5935448cb6c90a7054caa
+    guid: cbe20367791162c47beee45481b759e4
   - enabled: 1
     path: Assets/BrickBreaker/Scenes/Level4.unity
-    guid: af588bb0ca637a149aaaef8eb1286ca8
+    guid: 6fd2fb25d1d5935448cb6c90a7054caa
   - enabled: 1
     path: Assets/BrickBreaker/Scenes/Level5.unity
+    guid: af588bb0ca637a149aaaef8eb1286ca8
+  - enabled: 1
+    path: Assets/BrickBreaker/Scenes/Level6.unity
+    guid: 243b2ed237b647949af4b781e5b12fc4
+  - enabled: 1
+    path: Assets/BrickBreaker/Scenes/Level7.unity
     guid: 890797d665d78fb4fb248dbe8e672d4f
+  - enabled: 1
+    path: Assets/BrickBreaker/Scenes/Level8.unity
+    guid: f9b19730f1e858743b4f789f915f3475
+  - enabled: 1
+    path: Assets/BrickBreaker/Scenes/Level9.unity
+    guid: 55e4c1888bbd6d94ba929ac895bfd287
+  - enabled: 1
+    path: Assets/BrickBreaker/Scenes/Level10.unity
+    guid: 8235b0fe02985c140b512208e7615f73
   m_configObjects: {}

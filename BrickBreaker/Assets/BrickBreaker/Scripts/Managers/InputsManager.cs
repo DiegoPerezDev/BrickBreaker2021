@@ -8,7 +8,7 @@ public class InputsManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
-    - This class manage all of the inputs of the user, reads them and sends the results to other codes by changing values of some otheir variables.
+    - This class manage all of the inputs of the user, reads them and sends the results to other codes by changing values of some other variables.
     - This input manager works with Unitys new input system that uses 'input actions'
     - This code separates the inputs between menu inputs and gameplay inputs so we can disable the gameplay inputs when the game is paused or in menu.
     */
@@ -62,13 +62,14 @@ public class InputsManager : MonoBehaviour
         // Don't use any input on loading sceen
         if (GameManager.loadingScene)
             return;
-
+        
         // Inputs for menu management, it's in all scenes
         MenuInputs();
 
         // Inputs for gameplay scenes
-        if (gameplayInputsDisabled || !GameManager.inGameplay)
+        if (gameplayInputsDisabled || !(GameManager.currentSceneType == GameManager.SceneType.gameplay) )
             return;
+
         if (GameManager.currentSceneType == GameManager.SceneType.gameplay)
         {
             MovementInputs();
@@ -116,13 +117,13 @@ public class InputsManager : MonoBehaviour
         if (pause)
         {
             pause = false;
-            GameManager.pauseTrigger = true;
+            LevelManager.pauseTrigger = true;
         }
         // Return to previous menu
         else if (returnToMenu)
         {
             returnToMenu = false;
-            GameManager.returnTrigger = true;
+            UI_Manager.returnTrigger = true;
         }
         // Button trigger for gamepad
         else if (triggerMenuButton)
@@ -214,7 +215,7 @@ public class InputsManager : MonoBehaviour
         GameObject paddle = null;
         while (paddle == null)
         {
-            paddle = GameObject.Find("LevelDev/Paddle_(Clone)");
+            paddle = GameObject.Find(Paddle.paddlePath);
             yield return new WaitForSecondsRealtime(0.1f);
         }
 
@@ -258,7 +259,7 @@ public class InputsManager : MonoBehaviour
             if (!Ball.ballReleased)
             {
                 Ball.ballReleased = true;
-                GameObject ballGO = SearchTools.TryFind("Ball_(Clone)");
+                GameObject ballGO = SearchTools.TryFind(Ball.ballName);
                 Ball ball = SearchTools.TryGetComponent<Ball>(ballGO);
                 if (ball)
                     ball.ReleaseBall();
