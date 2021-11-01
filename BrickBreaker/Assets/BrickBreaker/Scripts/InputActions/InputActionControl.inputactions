@@ -44,6 +44,22 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "Press"
+                },
+                {
+                    "name": "TouchPress",
+                    "type": "Button",
+                    "id": "5e4f2447-d73b-4226-bb41-1a53c6a29b82",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)"
+                },
+                {
+                    "name": "TouchPosition",
+                    "type": "PassThrough",
+                    "id": "a5fa7dae-a52b-4b83-8f9f-b5ed6338f8bf",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "Press"
                 }
             ],
             "bindings": [
@@ -51,6 +67,17 @@
                     "name": "",
                     "id": "435385f6-97b4-42b0-904c-5cd19cdc8045",
                     "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "LeftMove",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e62d70a6-139b-4845-bf76-f8debc6fd817",
+                    "path": "<Keyboard>/leftArrow",
                     "interactions": "",
                     "processors": "",
                     "groups": "pc",
@@ -71,11 +98,33 @@
                 },
                 {
                     "name": "",
+                    "id": "22834a70-1899-401c-b833-dc458d140f6f",
+                    "path": "<Keyboard>/rightArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "RightMove",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "f9fd7eba-001b-4d09-8830-36ecf6f5bc43",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
                     "groups": "pc",
+                    "action": "Menu_GoBack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "54a128df-f821-4327-b1c8-65a067099bd8",
+                    "path": "*/{Back}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "android",
                     "action": "Menu_GoBack",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -101,6 +150,50 @@
                     "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b82b4247-6002-44d8-ba65-564a0e27b88c",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c9fa49b5-97eb-47a8-a168-9e9f2223c091",
+                    "path": "*/{Back}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "android",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c71e6d9c-ac65-4abb-bde8-999c60ab7de1",
+                    "path": "<Touchscreen>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "android",
+                    "action": "TouchPress",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aff904ad-1adb-4850-90e7-62421d159eb9",
+                    "path": "<Touchscreen>/primaryTouch/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "android",
+                    "action": "TouchPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }
@@ -112,6 +205,17 @@
             "devices": [
                 {
                     "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        },
+        {
+            "name": "android",
+            "bindingGroup": "android",
+            "devices": [
+                {
+                    "devicePath": "<Touchscreen>",
                     "isOptional": false,
                     "isOR": false
                 }

@@ -9,6 +9,7 @@ public class Paddle : MonoBehaviour
     [HideInInspector] public bool? moveDirR = null;
     [HideInInspector] public bool moveBool, canMoveR, canMoveL;
     private readonly float speed = 15f;
+    private float lerp;
 
     // Paddle data
     public static string paddleName = "Paddle", paddlePath = "LevelDev/Paddle";
@@ -58,8 +59,14 @@ public class Paddle : MonoBehaviour
 
     void FixedUpdate()
     {
-        if(moveBool)
+        if (moveBool)
+        {
+            if (lerp < 1)
+                lerp += Time.fixedDeltaTime * 5;
             Move();
+        }
+        else
+            lerp = 0f;
     }
 
 
@@ -77,15 +84,18 @@ public class Paddle : MonoBehaviour
         //  Check if the paddle is near the screen limits so it wont go outside of the screen.
         CheckLevelBounds();
 
+        
+        var increase = new Vector2(Mathf.Lerp(0, speed, lerp), 0f) * Time.fixedDeltaTime;
+
         if (moveDirR == true)
         {
             if(canMoveR)
-                rb.MovePosition(rb.position + new Vector2(speed, 0f) * Time.fixedDeltaTime);
+                rb.MovePosition(rb.position + increase);
         }
         else if (moveDirR == false)
         {
             if (canMoveL)
-                rb.MovePosition(rb.position - new Vector2(speed, 0f) * Time.fixedDeltaTime);
+                rb.MovePosition(rb.position - increase);
         }
     }
 

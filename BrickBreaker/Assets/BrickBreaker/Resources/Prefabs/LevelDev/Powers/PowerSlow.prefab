@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5915126082263103839}
   - component: {fileID: 5915126082263103832}
   - component: {fileID: 1181908637}
-  - component: {fileID: 1181908635}
+  - component: {fileID: -7230215578313679475}
   m_Layer: 0
   m_Name: PowerSlow
   m_TagString: SlowPower
@@ -122,7 +122,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &1181908635
+--- !u!114 &-7230215578313679475
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,7 +131,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5915126082263103837}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 55740d29375cc6a41ac3da9580456846, type: 3}
+  m_Script: {fileID: 11500000, guid: 2b1790246f9e3ea41813e97f36cb1bd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   power: slow

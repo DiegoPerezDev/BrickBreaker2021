@@ -101,6 +101,7 @@ public class GameplayMenu : MonoBehaviour
         {
             case "unstuck":
                 Ball.unstuckBallTrigger = true;
+                Ball.hitObject = true;
                 break;
 
             default:

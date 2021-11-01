@@ -10,6 +10,7 @@ TagManager:
   - FastPower
   - ShortPower
   - LargePower
+  - MetalBrick
   layers:
   - Default
   - TransparentFX

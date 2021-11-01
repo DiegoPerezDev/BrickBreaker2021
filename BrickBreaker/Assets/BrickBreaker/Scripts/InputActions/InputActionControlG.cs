@@ -1,4 +1,4 @@
-// GENERATED AUTOMATICALLY FROM 'Assets/BrickBreaker/Scripts/Other/InputActions/InputActionControl.inputactions'
+// GENERATED AUTOMATICALLY FROM 'Assets/BrickBreaker/Scripts/InputActions/InputActionControl.inputactions'
 
 using System;
 using System.Collections;
@@ -57,6 +57,22 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": ""Press""
+                },
+                {
+                    ""name"": ""TouchPress"",
+                    ""type"": ""Button"",
+                    ""id"": ""5e4f2447-d73b-4226-bb41-1a53c6a29b82"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": ""Press(behavior=2)""
+                },
+                {
+                    ""name"": ""TouchPosition"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""a5fa7dae-a52b-4b83-8f9f-b5ed6338f8bf"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": ""Press""
                 }
             ],
             ""bindings"": [
@@ -64,6 +80,17 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""name"": """",
                     ""id"": ""435385f6-97b4-42b0-904c-5cd19cdc8045"",
                     ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""LeftMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e62d70a6-139b-4845-bf76-f8debc6fd817"",
+                    ""path"": ""<Keyboard>/leftArrow"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""pc"",
@@ -84,11 +111,33 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""22834a70-1899-401c-b833-dc458d140f6f"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""RightMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""f9fd7eba-001b-4d09-8830-36ecf6f5bc43"",
                     ""path"": ""<Keyboard>/escape"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""pc"",
+                    ""action"": ""Menu_GoBack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""54a128df-f821-4327-b1c8-65a067099bd8"",
+                    ""path"": ""*/{Back}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""android"",
                     ""action"": ""Menu_GoBack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -114,6 +163,50 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""action"": ""Pause"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b82b4247-6002-44d8-ba65-564a0e27b88c"",
+                    ""path"": ""<Keyboard>/p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c9fa49b5-97eb-47a8-a168-9e9f2223c091"",
+                    ""path"": ""*/{Back}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""android"",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c71e6d9c-ac65-4abb-bde8-999c60ab7de1"",
+                    ""path"": ""<Touchscreen>/press"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""android"",
+                    ""action"": ""TouchPress"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""aff904ad-1adb-4850-90e7-62421d159eb9"",
+                    ""path"": ""<Touchscreen>/primaryTouch/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""android"",
+                    ""action"": ""TouchPosition"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -129,6 +222,17 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""isOR"": false
                 }
             ]
+        },
+        {
+            ""name"": ""android"",
+            ""bindingGroup"": ""android"",
+            ""devices"": [
+                {
+                    ""devicePath"": ""<Touchscreen>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                }
+            ]
         }
     ]
 }");
@@ -139,6 +243,8 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         m_ActionMap_ReleaseBall = m_ActionMap.FindAction("ReleaseBall", throwIfNotFound: true);
         m_ActionMap_Pause = m_ActionMap.FindAction("Pause", throwIfNotFound: true);
         m_ActionMap_Menu_GoBack = m_ActionMap.FindAction("Menu_GoBack", throwIfNotFound: true);
+        m_ActionMap_TouchPress = m_ActionMap.FindAction("TouchPress", throwIfNotFound: true);
+        m_ActionMap_TouchPosition = m_ActionMap.FindAction("TouchPosition", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -193,6 +299,8 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
     private readonly InputAction m_ActionMap_ReleaseBall;
     private readonly InputAction m_ActionMap_Pause;
     private readonly InputAction m_ActionMap_Menu_GoBack;
+    private readonly InputAction m_ActionMap_TouchPress;
+    private readonly InputAction m_ActionMap_TouchPosition;
     public struct ActionMapActions
     {
         private @InputActionControlG m_Wrapper;
@@ -202,6 +310,8 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         public InputAction @ReleaseBall => m_Wrapper.m_ActionMap_ReleaseBall;
         public InputAction @Pause => m_Wrapper.m_ActionMap_Pause;
         public InputAction @Menu_GoBack => m_Wrapper.m_ActionMap_Menu_GoBack;
+        public InputAction @TouchPress => m_Wrapper.m_ActionMap_TouchPress;
+        public InputAction @TouchPosition => m_Wrapper.m_ActionMap_TouchPosition;
         public InputActionMap Get() { return m_Wrapper.m_ActionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -226,6 +336,12 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 @Menu_GoBack.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnMenu_GoBack;
                 @Menu_GoBack.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnMenu_GoBack;
                 @Menu_GoBack.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnMenu_GoBack;
+                @TouchPress.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPress;
+                @TouchPress.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPress;
+                @TouchPress.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPress;
+                @TouchPosition.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPosition;
+                @TouchPosition.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPosition;
+                @TouchPosition.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPosition;
             }
             m_Wrapper.m_ActionMapActionsCallbackInterface = instance;
             if (instance != null)
@@ -245,6 +361,12 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 @Menu_GoBack.started += instance.OnMenu_GoBack;
                 @Menu_GoBack.performed += instance.OnMenu_GoBack;
                 @Menu_GoBack.canceled += instance.OnMenu_GoBack;
+                @TouchPress.started += instance.OnTouchPress;
+                @TouchPress.performed += instance.OnTouchPress;
+                @TouchPress.canceled += instance.OnTouchPress;
+                @TouchPosition.started += instance.OnTouchPosition;
+                @TouchPosition.performed += instance.OnTouchPosition;
+                @TouchPosition.canceled += instance.OnTouchPosition;
             }
         }
     }
@@ -258,6 +380,15 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
             return asset.controlSchemes[m_pcSchemeIndex];
         }
     }
+    private int m_androidSchemeIndex = -1;
+    public InputControlScheme androidScheme
+    {
+        get
+        {
+            if (m_androidSchemeIndex == -1) m_androidSchemeIndex = asset.FindControlSchemeIndex("android");
+            return asset.controlSchemes[m_androidSchemeIndex];
+        }
+    }
     public interface IActionMapActions
     {
         void OnLeftMove(InputAction.CallbackContext context);
@@ -265,5 +396,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         void OnReleaseBall(InputAction.CallbackContext context);
         void OnPause(InputAction.CallbackContext context);
         void OnMenu_GoBack(InputAction.CallbackContext context);
+        void OnTouchPress(InputAction.CallbackContext context);
+        void OnTouchPosition(InputAction.CallbackContext context);
     }
 }

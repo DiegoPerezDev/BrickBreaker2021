@@ -127,7 +127,9 @@ public class UI_Manager : MonoBehaviour
     {
         GameObject[] panelGameObject = null;
         int panelToClose = -1;
-        currentMenuLayer--;
+
+        if (currentMenuLayer > 0)
+            currentMenuLayer--;
 
         if (currentMenuLayer == 0)
             inMenu = false;
@@ -143,6 +145,12 @@ public class UI_Manager : MonoBehaviour
             panelGameObject = GameplayMenu.panelGO;
             panelToClose = (int)GameplayMenu.openedMenus[currentMenuLayer + 1];
             GameplayMenu.openedMenus[currentMenuLayer] = GameplayMenu.Panels.none;
+        }
+
+        if(panelToClose < 0)
+        {
+            print("Could not close menu because of the \"panelToClose\" var.");
+            return;
         }
 
         try

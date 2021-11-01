@@ -14,4 +14,10 @@ public class SaveData
         levelsScore = LevelManager.levelsScore;
     }
 
+    public static void LoadData(SaveData data)
+    {
+        LevelManager.levelsUnlocked = data.levelsUnlocked;
+        LevelManager.levelsScore = data.levelsScore;
+    }
+
 }

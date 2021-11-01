@@ -64,10 +64,12 @@ public class ScreenBounds : MonoBehaviour
         leftBound = new GameObject("LeftBound");
         leftBound.AddComponent<BoxCollider2D>();
         leftBound.transform.parent = gameObject.transform;
+        //leftBound.transform.Rotate(0f, 0f, -1f, Space.Self);
 
         rightBound = new GameObject("RightBound");
         rightBound.AddComponent<BoxCollider2D>();
         rightBound.transform.parent = gameObject.transform;
+        //rightBound.transform.Rotate(0f, 0f, 1f, Space.Self);
     }
 
     private void ResizeBoundObjects()

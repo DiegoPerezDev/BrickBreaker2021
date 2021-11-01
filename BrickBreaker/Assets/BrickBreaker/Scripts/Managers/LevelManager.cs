@@ -48,6 +48,9 @@ public class LevelManager : MonoBehaviour
     private static GameObject screenBoundsPref;
     private static Ball ballCode;
 
+    // Bricks
+    private static IEnumerator lastBricksCor;
+
     // Audio
     public static AudioSource[] bricksAudioSources = new AudioSource[5];
     public static AudioSource powersAudioSource;
@@ -129,10 +132,12 @@ public class LevelManager : MonoBehaviour
     void OnDestroy()
     {
         StopAllCoroutines();
+        instance.StopAllCoroutines();
+        lastBricksCor = null;
     }
 
 
-    #region setting functions
+    #region start settings functions
 
     /// <summary>
     /// <para> For setting everything for the gameplay level when starting those levels.</para> 
@@ -199,19 +204,11 @@ public class LevelManager : MonoBehaviour
 
     private static void InstantiateLevelObjects()
     {
+        if(instance.gameObject.GetComponent<Powers>() == null)
+            instance.gameObject.AddComponent<Powers>();
         GameObject screenBounds = Instantiate(screenBoundsPref, screenBoundsPref.transform.position, Quaternion.identity);
         screenBounds.transform.parent = instance.gameObject.transform;
         screenBounds.GetComponent<ScreenBounds>().Begin();
-    }
-
-    public static void CheckNumberOfBricks()
-    {
-
-        if (numberOfActiveBricks == 0)
-        {
-            Destroy(SearchTools.TryFind(Ball.ballPath));
-            WinGame();
-        }
     }
 
     #endregion
@@ -256,25 +253,6 @@ public class LevelManager : MonoBehaviour
 
     #region Win and Lose 
 
-    public static void LoseLive()
-    {
-        lives--;
-        GameplayMenu.RewriteLife();
-        if (lives < 1)
-        {
-            LoseGame();
-            Destroy(ballCode.gameObject);
-            return;
-        }
-        else
-        {
-            AudioManager.PlayAudio(AudioManager.GameAudioSource, loseLifeAudio, false, 0.4f);
-            var camCode = Camera.main.GetComponent<CameraShake>();
-            camCode.StartCoroutine(camCode.Shake(0.25f, 0.07f));
-        }
-        ballCode.RestartBall();
-    }
-
     /// <summary>
     /// What happens when losing the game. Call it in another code that triggers the losing.
     /// </summary>
@@ -303,21 +281,83 @@ public class LevelManager : MonoBehaviour
         // Audio and UI settings
         AudioManager.StopLevelSong();
         AudioManager.PlayAudio(AudioManager.GameAudioSource, winAudio, false, 1f);
+        scoreImg.sprite = scoreImgs[lives];
         UI_Manager.OpenMenuLayer<GameplayMenu.Panels>(GameplayMenu.Panels.win);
-        if (newRecord)
-        {
-            scoreImg.sprite = scoreImgs[lives];
-        }
-        else
+        if (!newRecord)
             newRecordText.SetActive(false);
 
-        // Gemeral management
+        // General management
         Pause(true);
         GameManager.SaveGameData(newRecord, currentLevel);
     }
 
-    #endregion
+    public static void LoseLive()
+    {
+        lives--;
+        GameplayMenu.RewriteLife();
+        if (lives < 1)
+        {
+            LoseGame();
+            Destroy(ballCode.gameObject);
+            return;
+        }
+        else
+        {
+            AudioManager.PlayAudio(AudioManager.GameAudioSource, loseLifeAudio, false, 0.4f);
+            var camCode = Camera.main.GetComponent<CameraShake>();
+            camCode.StartCoroutine(camCode.Shake(0.25f, 0.07f));
+        }
+        ballCode.RestartBall();
+    }
 
-    
+    public static void CheckNumberOfBricks()
+    {
+        if (numberOfActiveBricks == 0)
+        {
+            Destroy(SearchTools.TryFind(Ball.ballPath));
+            WinGame();
+        }
+        else if (numberOfActiveBricks <= 3)
+        {
+            if (lastBricksCor == null)
+            {
+                lastBricksCor = LastBricksDestruction();
+                instance.StartCoroutine(lastBricksCor);
+            }
+        }
+    }
+
+    private static IEnumerator LastBricksDestruction()
+    {
+        // Check if we are done destroying the bricks
+        if (numberOfActiveBricks <= 0)
+        {
+            CheckNumberOfBricks();
+            yield break;
+        }
+
+        // delay
+        float delay = 0f;
+        while(delay < 15f)
+        {
+            yield return null;
+            delay += Time.deltaTime;
+        }
+
+        // Dont destroy the bricks if the ball is stuck
+        if (Ball.stuck)
+            goto Restart;
+
+        // destroy random active brick
+        Bricks brick = instance.gameObject.transform.Find("Bricks_").GetComponentInChildren<Bricks>();
+        if (brick != null)
+            brick.DestroyBrick();
+
+        // restart
+        Restart:
+        instance.StartCoroutine(LastBricksDestruction());
+    }
+
+    #endregion
 
 }

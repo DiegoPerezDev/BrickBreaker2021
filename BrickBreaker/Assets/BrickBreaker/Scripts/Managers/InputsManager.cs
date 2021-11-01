@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using MyTools;
 using System.Collections;
+using UnityEngine.InputSystem;
 
 public class InputsManager : MonoBehaviour
 {
@@ -20,11 +21,6 @@ public class InputsManager : MonoBehaviour
     private static InputActionControlG input;
     private static InputsManager instance;
     public static bool InputsReady;
-
-    // Input device change
-    [HideInInspector] public enum InputDevices { pc, smartphone, none }
-    public static InputDevices currentInputDevice;
-    public readonly static string[] inputDevicesNames = { "pc", "smartphone" };
 
     // Menu inputs
     public static bool pause, returnToMenu, triggerMenuButton;
@@ -50,10 +46,11 @@ public class InputsManager : MonoBehaviour
         else
             Destroy(this);
     }
-
+    
     void Start()
     {
         gameplayInputsDisabled = true;
+        SetInputMask();
         InputCallBacks();
     }
 
@@ -87,26 +84,64 @@ public class InputsManager : MonoBehaviour
 
     // - - - - MAIN MANAGEMENT - - - -
 
-    #region Start functions
+    #region Inputs management functions
 
     /// <summary>
     /// This function set the callbacks for the inputs. Read the input actions and store the results in certain variables for afterward management.
     /// </summary>
-    private void InputCallBacks()
+    private static void InputCallBacks()
     {
         //Read menu inputs
         input.ActionMap.Pause.performed += ctx => pause = ctx.ReadValueAsButton();
         input.ActionMap.Menu_GoBack.performed += ctx => returnToMenu = ctx.ReadValueAsButton();
 
+#if UNITY_STANDALONE
         //Read gameplay inputs
         input.ActionMap.LeftMove.performed += ctx => leftMove = ctx.ReadValueAsButton();
         input.ActionMap.RightMove.performed += ctx => rightMove = ctx.ReadValueAsButton();
         input.ActionMap.ReleaseBall.performed += ctx => releaseBall = ctx.ReadValueAsButton();
+#endif
+
+#if UNITY_ANDROID
+        //Read gameplay inputs
+        input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
+        input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
+#endif
+    }
+
+    // Change the input device to an specific one. 
+    private static void SetInputMask()
+    {
+        #if UNITY_STANDALONE
+                input.bindingMask = InputBinding.MaskByGroup("pc");
+        #endif
+
+        #if UNITY_ANDROID
+                input.bindingMask = InputBinding.MaskByGroup("android");
+        #endif
+
+        //input.bindingMask = new InputBinding { groups = controlScheme };
+    }
+
+    /// <summary>
+    /// <para>Set false all the trigger variables, those variables that stores the values read from the input actions.</para>
+    /// <para>For evading unwanted actions because the triggers could save an active input when disabling the inputs.</para>
+    /// </summary>
+    public static void DisableTriggers()
+    {
+        // - MAIN MANAGEMENT - 
+        pause = returnToMenu = triggerMenuButton = false;
+
+        // - GAMEPLAY -
+        leftMove = rightMove = false;
+        releaseBall = false;
     }
 
     #endregion
 
-    #region Inputs management functions
+    // - - - - MENU - - - -
+
+    #region Menu
 
     /// <summary>
     /// Manage what happens with the triggers related to the menu management.
@@ -129,72 +164,15 @@ public class InputsManager : MonoBehaviour
         else if (triggerMenuButton)
         {
             triggerMenuButton = false;
-            if (currentInputDevice != InputDevices.pc)
-            {
-                Button currentButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-                if (currentButton != null)
-                    currentButton.onClick.Invoke();
-            }
+#if UNITY_STANDALONE
+            Button currentButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            if (currentButton != null)
+                currentButton.onClick.Invoke();
+#endif
         }
-    }
-
-    /// <summary>
-    /// <para>Set false all the trigger variables, those variables that stores the values read from the input actions.</para>
-    /// <para>For evading unwanted actions because the triggers could save an active input when disabling the inputs.</para>
-    /// </summary>
-    public static void DisableTriggers()
-    {
-        // - MAIN MANAGEMENT - 
-        pause = returnToMenu = triggerMenuButton = false;
-
-        // - GAMEPLAY -
-        leftMove = rightMove = false;
-        releaseBall = false;
     }
 
     #endregion
-
-    #region Input device change functions
-    /*
-    private static void ChangeInputDevice()
-    {
-        if (currentInputDevice == InputDevices.pc)
-            ChangeInputDevice(InputDevices.smartphone);
-        else if (currentInputDevice == InputDevices.smartphone)
-            ChangeInputDevice(InputDevices.pc);
-    }
-
-    // Change the input device to an specific one. 
-    private static void ChangeInputDevice(InputDevices inputDevice)
-    {
-        string controlScheme = inputDevicesNames[(int)inputDevice];
-
-        if (inputDevice == InputDevices.pc)
-        {
-            if (currentInputDevice != InputDevices.pc)
-            {
-                currentInputDevice = InputDevices.pc;
-                input.bindingMask = new InputBinding { groups = controlScheme };
-                //print("using keyboard now");
-            }
-        }
-        else if (inputDevice == InputDevices.smartphone)
-        {
-            if (currentInputDevice != InputDevices.smartphone)
-            {
-                currentInputDevice = InputDevices.smartphone;
-                input.bindingMask = new InputBinding { groups = controlScheme };
-                //print("using gamepad now");
-            }
-        }
-        else
-        {
-            print("didn't get a propper input device name or the convertion was wrong.");
-        }
-    }
-    */
-    #endregion
-
 
     // - - - - GAMEPLAY - - - -
 
@@ -224,6 +202,52 @@ public class InputsManager : MonoBehaviour
     }
 
     #endregion
+
+    #region android functions
+
+#if UNITY_ANDROID
+
+    private static void StartScreenTouched()
+    {
+        //print("start touching the screen");
+
+        // Set the paddle movement and the ball release inputs for each case
+        Vector2 touchPos = input.ActionMap.TouchPosition.ReadValue<Vector2>();
+        var screenWidth = Screen.width;
+
+        if(!rightMove)
+        {
+            if ((touchPos.x > screenWidth * 2f / 3f))
+            {
+                rightMove = true;
+                return;
+            }
+        }
+        if(!leftMove)
+        {
+            if ((touchPos.x < screenWidth / 3f) && (touchPos.x > 0))
+            {
+                leftMove = true;
+                return;
+            }
+        }
+        if(!releaseBall)
+        {
+            releaseBall = true;
+        }
+    }
+
+    private static void EndScreenTouched()
+    {
+        //print("stopped touching the screen");
+        
+        // Disable movement triggers
+        leftMove = rightMove = false;
+    }
+
+#endif
+
+#endregion
 
     #region Gameplay inputs management
 
@@ -267,6 +291,6 @@ public class InputsManager : MonoBehaviour
         }
     }
 
-    #endregion
+#endregion
 
 }

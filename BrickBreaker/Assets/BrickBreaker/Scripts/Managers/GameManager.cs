@@ -272,7 +272,9 @@ public class GameManager : MonoBehaviour
             delay += Time.deltaTime;
         }
 
-        SaveSystem.LoadLevelData();
+        SaveData saveData = SaveSystem.LoadLevelData();
+        SaveData.LoadData(saveData);
+
         if (LevelManager.levelsUnlocked > 1)
         {
             for (int i = 0; i < LevelManager.levelsUnlocked; i++)

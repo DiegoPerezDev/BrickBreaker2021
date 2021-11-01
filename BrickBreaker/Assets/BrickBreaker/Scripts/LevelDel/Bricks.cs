@@ -75,24 +75,35 @@ public class Bricks : MonoBehaviour
                 }
             }
         }
+
         // Destroy this brick and substract if in the 'LevelManager' when life = 0
         else if(currentLife == 0)
         {
-            AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.destructionAudio, transform.parent.gameObject, false, 0.7f);
-            Instantiate(breakAnimationPref, transform.position, Quaternion.identity);
-            LevelManager.numberOfActiveBricks--;
-            MaySpawnPower();
-            Destroy(gameObject);
+            DestroyBrick();
         }
+    }
+
+    public void DestroyBrick()
+    {
+        AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.destructionAudio, transform.parent.gameObject, false, 0.7f);
+        Instantiate(breakAnimationPref, transform.position, Quaternion.identity);
+        LevelManager.numberOfActiveBricks--;
+        MaySpawnPower();
+        Destroy(gameObject);
     }
 
     private void MaySpawnPower()
     {
+        // Limit the amount of powers in the scene
+        if (Powers.powersSpawned >= 3)
+            return;
+
         // Chance to spawn a power
         if ((Random.Range(0, 100)) > 10)
             return;
 
         // Spawn random power
+        Powers.powersSpawned++;
         int power = Random.Range(1, 4);
         GameObject powerToSpawn = null;
         string path = "Prefabs/LevelDev/Powers";

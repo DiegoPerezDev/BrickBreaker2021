@@ -17,9 +17,6 @@ public class Ball : MonoBehaviour
     // Ball speed changing
     private float speed, startSpeed, maxSpeed, previousSpeed;
     private readonly float speedInc = 0.2f;
-    private Vector2 ballVel;
-    private bool changeVel;
-    private Vector2 nextVel;
     private IEnumerator usingPower;
 
     // Paddle data
@@ -31,8 +28,9 @@ public class Ball : MonoBehaviour
     private AudioClip ballHitAudio, ballReleaseAudio;
     
     // Unstuck process
-    public static bool unstuckBallTrigger;
+    public static bool unstuckBallTrigger, hitObject;
     private GameObject unstuckButton;
+    public static bool stuck;
 
     // Game Management
     public static bool StartSet;
@@ -43,7 +41,7 @@ public class Ball : MonoBehaviour
         // For unstuck
         unstuckButton = SearchTools.TryFind("UI/UI_Gameplay/Canvas_InPlay/Panel_Messages/ButtonUnstuck");
         unstuckButton.SetActive(false);
-        StartCoroutine(CheckBallStuck());
+        StartCoroutine(CheckStuck());
 
         // Audiovisuals
         ballHitAudio = Resources.Load<AudioClip>("Audio/Level objects/(lo1) ballHit");
@@ -77,6 +75,8 @@ public class Ball : MonoBehaviour
             unstuckBallTrigger = false;
             UnstuckBall();
         }
+
+        //print("vel: " + rb.velocity.magnitude);
     }
 
     void FixedUpdate()
@@ -85,20 +85,7 @@ public class Ball : MonoBehaviour
             return;
 
         if (!ballReleased)
-        {
             FollowPaddle();
-            return;
-        }
-
-        // Change the vel of the ball after a collision
-        if (changeVel)
-        {
-            changeVel = false;
-            rb.velocity = ballVel = nextVel;
-        }
-        // Remember the ball vel when we collide an object so we can get the reflection.
-        else
-            ballVel = rb.velocity;
     }
 
     void OnDestroy()
@@ -172,6 +159,7 @@ public class Ball : MonoBehaviour
         // Ball outside of the screen
         if (collision.gameObject.CompareTag("BottomBound"))
         {
+            trail.Clear();
             trail.enabled = false;
             // Prevent multiple losing or losing when setting the game
             if (LevelManager.lives > 0)
@@ -184,28 +172,39 @@ public class Ball : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Player"))
         {
+            // For unstuck purposes
+            hitObject = true;
+
             // Get the reflect direction of the ball in the paddle, its different because it may change the ball dir in the x axis
-            VelAfterPaddleColl(contact, ref nextVel);
+            if (VelAfterPaddleColl(contact))
+                return;
         }
-        else
+
+        // Collision of the paddle if it did not hit the paddle in the sides
+        /* REFLECT WITHOUT UNITY'S PHYSICS MATERIAL BOUNCINESS
+        Vector2 ballReflectedVel = Vector2.Reflect(ballVel, contact.normal);
+        Vector2 finalDir = Vector3.Normalize(ballReflectedVel);
+        rb.velocity = ballVel = finalDir * speed;
+        */
+
+        if (collision.gameObject.CompareTag("Brick"))
         {
-            // Get the reflect direction of the ball if it did not hit the paddle
-            VelReflected(contact, ref nextVel);
+            // For unstuck purposes
+            hitObject = true;
 
-            if (collision.gameObject.CompareTag("Brick"))
-            {
-                // Count the remaining bricks for knowing when to win
-                collision.gameObject.GetComponent<Bricks>().GotHit();
-                LevelManager.CheckNumberOfBricks();
-            }
+            // Count the remaining bricks for knowing when to win
+            collision.gameObject.GetComponent<Bricks>().GotHit();
+            LevelManager.CheckNumberOfBricks();
         }
-
-        changeVel = true;
+        else if(collision.gameObject.CompareTag("MetalBrick"))
+        {
+            collision.gameObject.GetComponent<Bricks>().GotHit();
+        }
     }
 
-    private void VelAfterPaddleColl(ContactPoint2D contact, ref Vector2 nextVel)
+    private bool VelAfterPaddleColl(ContactPoint2D contact)
     {
-        Vector2 finalDir, inNormal, ballReflectedVel;
+        Vector2 finalDir, inNormal;
         Vector2 contactPoint = contact.point;
 
         // Check if the ball is hitting the paddle upwards or downwards for setting the normal manually, evading weird reflections in the borders.
@@ -221,7 +220,7 @@ public class Ball : MonoBehaviour
         {
             // set new vel based in the hypotenuse formula, knowing that we dont want the ball to go further than 45° relative to the paddle (0.707)
             var xVel = MapValue(contactPoint.x, paddlePos.x - paddleSizeX / 2f, paddlePos.x + paddleSizeX / 2f, -0.707f, 0.707f);
-            var yVel = Mathf.Sqrt( (Mathf.Pow(xVel, 2) + 1) ) * inNormal.y;
+            var yVel = Mathf.Sqrt((Mathf.Pow(xVel, 2) + 1)) * inNormal.y;
 
             // Check for obstacles so we can change the direction of the ball so it wont get blocked with the level bounds
             if ((xVel > 0) && (DetectObstacles()[1]))
@@ -230,24 +229,11 @@ public class Ball : MonoBehaviour
                 xVel = -xVel;
 
             finalDir = Vector3.Normalize(new Vector2(xVel, yVel));
+            rb.velocity = finalDir * speed;
+            return true;
         }
-        // Make a normal reflection in the ball in case of colliding in the paddle center
         else
-        {
-            ballReflectedVel = Vector2.Reflect(ballVel, inNormal);
-            finalDir = Vector3.Normalize(ballReflectedVel);
-        }
-
-        nextVel = finalDir * speed;
-    }
-
-    private void VelReflected(ContactPoint2D contact, ref Vector2 nextVel)
-    {
-        Vector2 finalDir, inNormal, ballReflectedVel;
-        inNormal = contact.normal;
-        ballReflectedVel = Vector2.Reflect(ballVel, inNormal);
-        finalDir = Vector3.Normalize(ballReflectedVel);
-        nextVel = finalDir * speed;
+            return false;
     }
 
     /// <summary>
@@ -286,7 +272,7 @@ public class Ball : MonoBehaviour
 
     #endregion
 
-    #region Meanwhile functions
+    #region Ball settings functions
 
     public void RestartBall()
     {
@@ -306,8 +292,13 @@ public class Ball : MonoBehaviour
             delay += Time.deltaTime;
         }
 
-        // Increase speed and restart the corroutine till reaching the maxSpeed
+        //Set the speed in the ball
         speed += speedInc;
+        var vel = rb.velocity;
+        if (vel.magnitude > 0)
+            rb.velocity = Vector3.Normalize(vel) * speed;
+
+        // Limit the speed increase
         if (speed >= maxSpeed)
             print("maxSpeed reached");
         else
@@ -319,11 +310,11 @@ public class Ball : MonoBehaviour
     #region Unstuck functions
 
     /// <summary>
-    /// Check if the ball is stucked moving completely horizontal.
+    /// Check if the ball has been a lot of time moving without losing or hitting the paddle.
     /// </summary>
-    private IEnumerator CheckBallStuck()
+    private IEnumerator CheckStuck()
     {
-        // delay for performance
+        // delay
         float delay = 0f;
         while (delay < 0.5f)
         {
@@ -331,63 +322,47 @@ public class Ball : MonoBehaviour
             delay += Time.deltaTime;
         }
 
-        // Check if the ball is stuck HORIZONTALLY
-        float ballSpeed = Mathf.Abs(Vector3.Normalize(rb.velocity).x);
-        if (ballSpeed < 0.9f)
-            goto NextCheck;
+        // Dont check stuck if we haven't released the ball
+        if(!ballReleased)
+            goto RepeatCor;
 
-        // If the ball is stuck moving horizontally, check if it stays like that for a certain time
-        delay = 0f;
-        while (delay < 5f)
+        if (!stuck)
         {
-            yield return null;
-            delay  += Time.deltaTime;
-        }
-        ballSpeed = Mathf.Abs(Vector3.Normalize(rb.velocity).x);
-        if (ballSpeed >= 0.9f)
-        {
-            unstuckButton.SetActive(true);
-
-            delay = 0f;
-            while (delay < 7f)
+            // Check if we have hit something important in the past seconds
+            for (int i = 0; i < 12; i++)
             {
-                yield return null;
-                delay += Time.deltaTime;
+                // delay
+                delay = 0f;
+                while (delay < 0.5f)
+                {
+                    yield return null;
+                    delay += Time.deltaTime;
+                }
+
+                if (hitObject)
+                {
+                    hitObject = false;
+                    goto RepeatCor;
+                }
             }
 
-            unstuckButton.SetActive(false);
-        }
-        NextCheck:
-
-        // Check if the ball is stuck VERTICALLY
-        ballSpeed = Mathf.Abs(Vector3.Normalize(rb.velocity).y);
-        if (ballSpeed < 0.9f)
-            goto NotStuck;
-
-        // If the ball is stuck moving horizontally, check if it stays like that for a certain time
-        delay = 0f;
-        while (delay < 4f)
-        {
-            yield return null;
-            delay += Time.deltaTime;
-        }
-        ballSpeed = Mathf.Abs(Vector3.Normalize(rb.velocity).y);
-        if (ballSpeed >= 0.9f)
-        {
+            // If we are stuck for a few time
+            stuck = true;
             unstuckButton.SetActive(true);
-
-            delay = 0f;
-            while (delay < 4f)
+        }
+        else
+        {
+            // Unstuck by button or if we hit an object
+            if (hitObject)
             {
-                yield return null;
-                delay += Time.deltaTime;
+                hitObject = stuck = false;
+                unstuckButton.SetActive(false);
             }
-
-            unstuckButton.SetActive(false);
         }
 
-    NotStuck:
-        StartCoroutine(CheckBallStuck());
+        // If we are not stuck
+        RepeatCor:
+        StartCoroutine(CheckStuck());
     }
 
     private void UnstuckBall()
