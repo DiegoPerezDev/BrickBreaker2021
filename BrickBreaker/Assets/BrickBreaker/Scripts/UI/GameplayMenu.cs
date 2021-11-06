@@ -10,6 +10,13 @@ using UnityEngine.Audio;
 
 public class GameplayMenu : MonoBehaviour
 {
+    /*
+     * INSTRUCTIONS:
+     * This codes manage the menu setup, the buttons listeners and actions nad the level pause.
+     * The specific behaviour of some data (e.g.  life) are done in other UI codes.
+     */
+
+
     // - - MAIN MANAGEMENT - -
 
     // - - - Transition management - - -
@@ -23,24 +30,31 @@ public class GameplayMenu : MonoBehaviour
     public static Panels[] openedMenus = new Panels[10];
 
     // - - - HUD - - -
-    private static TextMeshProUGUI lifeTmp;
+    public static GameObject unstuckButton;
 
     // - - - Pause menu - - -
     public AudioMixer musicMixer, SFX_Mixer;
     public Slider musicSlider, sfxSlider;
     private static float musicVol = 0f, sfxVol = 0f;
 
+    // - - - - Win menu - - - -
+    [SerializeField] private bool lastLevel;
 
-    void Start()
+
+    void Awake()
     {
         // We are now at the gameplay play time
         UI_Manager.currentMenuLayer = 0;
         for (int i = 0; i < openedMenus.Length; i++)
             openedMenus[i] = Panels.none;
+    }
 
+    void Start()
+    {
         // Set UI for both of the gameplay Canvas
         SetHUD();
         SetPauseMenu(ref panelGO, panelsSceneName);
+        CheckIfLastLevel();
 
         // Tell the 'Game manager' that the UI is ready so it can close the loading panel.
         ready = true;
@@ -59,46 +73,44 @@ public class GameplayMenu : MonoBehaviour
     public static void SetHUD()
     {
         // Get gameplay HUD components
-        GameObject lifeTmpGO = SearchTools.TryFind("UI/UI_Gameplay/Canvas_InPlay/Panel_HUD/Life");
-        lifeTmp = SearchTools.TryGetComponent<TextMeshProUGUI>(lifeTmpGO);
+        unstuckButton = SearchTools.TryFind("UI/Canvas_HUD/ButtonUnstuck");
+        unstuckButton.SetActive(false);
 
         // Set buttons
         AssignHUDButtonsListener();
-
-        // Set HUD
-        RestartLive();
-    }
-
-    private static void RestartLive()
-    {
-        if (lifeTmp != null)
-            lifeTmp.text = "Life: " + LevelManager.liveCap;
-    }
-
-    public static void RewriteLife()
-    {
-        lifeTmp.text = "Life: " + LevelManager.lives;
     }
 
     private static void AssignHUDButtonsListener()
     {
-        // - - - - MESSAGES PANEL - - - -
+        // - - - - HUD CANVAS - - - -
 
         Button tempButton;
-        string panelPath = "UI/UI_Gameplay/Canvas_InPlay/Panel_Messages";
+        string panelPath = "UI/Canvas_HUD";
 
-        // Restart button
+        // Unstuck button
         tempButton = GameObject.Find(panelPath + "/ButtonUnstuck").GetComponent<Button>();
-        tempButton.onClick.AddListener(delegate { InplayButtonsActions("unstuck"); });
+        tempButton.onClick.AddListener(delegate { HUDButtonsActions("unstuck"); });
+
+        // - - - - RIGHTBLOCK PANEL - - - -
+
+        panelPath = "UI/Canvas_HUD/Panel_RightBlock";
+
+        // Pause button
+        tempButton = GameObject.Find(panelPath + "/PauseButton").GetComponent<Button>();
+        tempButton.onClick.AddListener(delegate { HUDButtonsActions("pause"); });
     }
 
-    private static void InplayButtonsActions(string button)
+    private static void HUDButtonsActions(string button)
     {
         button = button.ToLower();
         button = button.Trim();
 
         switch (button)
         {
+            case "pause":
+                LevelManager.pauseTrigger = true;
+                return;
+
             case "unstuck":
                 Ball.unstuckBallTrigger = true;
                 Ball.hitObject = true;
@@ -119,7 +131,7 @@ public class GameplayMenu : MonoBehaviour
     public void SetPauseMenu(ref GameObject[] panelGO, string[] panelsSceneName)
     {
         // Get panels for gameplay
-        GameObject canvasGameplayMenu = SearchTools.TryFind("UI/UI_Gameplay/Canvas_Menu");
+        GameObject canvasGameplayMenu = SearchTools.TryFind("UI/Canvas_Menu");
         for (int i = 1; i < Enum.GetValues(typeof(Panels)).Length; i++)
         {
             panelGO[i] = SearchTools.TryFindInGameobject(canvasGameplayMenu, panelsSceneName[i]);
@@ -191,7 +203,7 @@ public class GameplayMenu : MonoBehaviour
     {
         // - - - - PAUSE PANEL - - - -
 
-        string panelPath = "UI/UI_Gameplay/Canvas_Menu/Panel_Pause";
+        string panelPath = "UI/Canvas_Menu/Panel_Pause";
         Button tempButton;
 
         // Continue button
@@ -201,10 +213,6 @@ public class GameplayMenu : MonoBehaviour
         // Restart button
         tempButton = GameObject.Find(panelPath + "/ButtonRestart").GetComponent<Button>();
         tempButton.onClick.AddListener(delegate { PauseMenuButtonsActions("restart"); });
-
-        // Settings button
-        tempButton = GameObject.Find(panelPath + "/ButtonSettings").GetComponent<Button>();
-        tempButton.onClick.AddListener(delegate { PauseMenuButtonsActions("settings"); });
 
         // Main menu button
         tempButton = GameObject.Find(panelPath + "/ButtonMainmenu").GetComponent<Button>();
@@ -217,7 +225,7 @@ public class GameplayMenu : MonoBehaviour
 
         // - - - - QUIT CONFIRMATION PANEL - - - -
 
-        panelPath = "UI/UI_Gameplay/Canvas_Menu/Panel_QuitConfirmation";
+        panelPath = "UI/Canvas_Menu/Panel_QuitConfirmation";
 
         // Confirm button
         tempButton = GameObject.Find(panelPath + "/ButtonConfirm").GetComponent<Button>();
@@ -230,7 +238,7 @@ public class GameplayMenu : MonoBehaviour
 
         // - - - - WIN PANEL - - - -
 
-        panelPath = "UI/UI_Gameplay/Canvas_Menu/Panel_Win";
+        panelPath = "UI/Canvas_Menu/Panel_Win";
 
         // Next level button
         tempButton = GameObject.Find(panelPath + "/ButtonNextLevel").GetComponent<Button>();
@@ -243,7 +251,7 @@ public class GameplayMenu : MonoBehaviour
 
         // - - - - LOSE PANEL - - - -
 
-        panelPath = "UI/UI_Gameplay/Canvas_Menu/Panel_Lose";
+        panelPath = "UI/Canvas_Menu/Panel_Lose";
 
         // Restart button
         tempButton = GameObject.Find(panelPath + "/ButtonRestart").GetComponent<Button>();
@@ -260,4 +268,16 @@ public class GameplayMenu : MonoBehaviour
 
     #endregion
 
+    #region general
+
+    private void CheckIfLastLevel()
+    {
+        if (lastLevel)
+        {
+            GameObject nextLevelButton = SearchTools.TryFind("UI/Canvas_Menu/Panel_Win/ButtonNextLevel");
+            Destroy(nextLevelButton);
+        }
+    }
+
+    #endregion
 }

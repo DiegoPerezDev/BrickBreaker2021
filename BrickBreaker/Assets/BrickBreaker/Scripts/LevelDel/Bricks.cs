@@ -95,7 +95,7 @@ public class Bricks : MonoBehaviour
     private void MaySpawnPower()
     {
         // Limit the amount of powers in the scene
-        if (Powers.powersSpawned >= 3)
+        if (LevelManager.powersSpawned >= 3)
             return;
 
         // Chance to spawn a power
@@ -103,8 +103,8 @@ public class Bricks : MonoBehaviour
             return;
 
         // Spawn random power
-        Powers.powersSpawned++;
-        int power = Random.Range(1, 4);
+        LevelManager.powersSpawned++;
+        int power = Random.Range(1, 5);
         GameObject powerToSpawn = null;
         string path = "Prefabs/LevelDev/Powers";
         switch (power)
@@ -124,6 +124,9 @@ public class Bricks : MonoBehaviour
             case 4:
                 powerToSpawn = Resources.Load<GameObject>($"{path}/PowerLarge");
                 break;
+
+            default:
+                return;
         } 
         if(powerToSpawn != null)
             Instantiate(powerToSpawn, transform.position, Quaternion.identity);
@@ -137,8 +140,13 @@ public class Bricks : MonoBehaviour
         float delay = 0f;
         while(delay < 0.2f)
         {
-            yield return null;
-            delay += Time.deltaTime;
+            float delay2 = 0f;
+            while (delay2 < 0.05f)
+            {
+                yield return null;
+                delay += Time.deltaTime;
+                delay2 += Time.deltaTime;
+            }
             float formula = Mathf.Sin(delay * 8 * speed) * amount;
             transform.position = startPos + new Vector2(formula, formula);
         }

@@ -46,20 +46,20 @@
                     "interactions": "Press"
                 },
                 {
-                    "name": "TouchPress",
-                    "type": "Button",
-                    "id": "5e4f2447-d73b-4226-bb41-1a53c6a29b82",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "Press(behavior=2)"
-                },
-                {
                     "name": "TouchPosition",
                     "type": "PassThrough",
-                    "id": "a5fa7dae-a52b-4b83-8f9f-b5ed6338f8bf",
+                    "id": "f67a296d-5a53-4d27-bdc1-9cfbdc82a34b",
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "Press"
+                },
+                {
+                    "name": "TouchPress",
+                    "type": "Button",
+                    "id": "d75036d5-cb73-4652-a01d-a0cb6154d62d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)"
                 }
             ],
             "bindings": [
@@ -124,7 +124,7 @@
                     "path": "*/{Back}",
                     "interactions": "",
                     "processors": "",
-                    "groups": "android",
+                    "groups": "smartphone",
                     "action": "Menu_GoBack",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -168,29 +168,29 @@
                     "path": "*/{Back}",
                     "interactions": "",
                     "processors": "",
-                    "groups": "android",
+                    "groups": "smartphone",
                     "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "c71e6d9c-ac65-4abb-bde8-999c60ab7de1",
+                    "id": "c708741b-e7e6-4b7e-a8d4-6c22490dbd76",
                     "path": "<Touchscreen>/press",
                     "interactions": "",
                     "processors": "",
-                    "groups": "android",
+                    "groups": "smartphone",
                     "action": "TouchPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "aff904ad-1adb-4850-90e7-62421d159eb9",
+                    "id": "83f0f603-0cb6-4e80-8742-a8d43f7a474c",
                     "path": "<Touchscreen>/primaryTouch/position",
                     "interactions": "",
                     "processors": "",
-                    "groups": "android",
+                    "groups": "smartphone",
                     "action": "TouchPosition",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -211,8 +211,8 @@
             ]
         },
         {
-            "name": "android",
-            "bindingGroup": "android",
+            "name": "smartphone",
+            "bindingGroup": "smartphone",
             "devices": [
                 {
                     "devicePath": "<Touchscreen>",

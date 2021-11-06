@@ -26,7 +26,7 @@ public class MainMenu : MonoBehaviour
     void Awake()
     {
         // Get panels components and leave only the main canvas
-        GameObject canvasMainmenu = SearchTools.TryFind("UI/UI_Mainmenu/Canvas_Mainmenu");
+        GameObject canvasMainmenu = SearchTools.TryFind("UI/Canvas_Mainmenu");
         for (int i = 1; i < Enum.GetValues(typeof(Panels)).Length; i++)
         {
             panelGO[i] = SearchTools.TryFindInGameobject(canvasMainmenu, panelsSceneName[i]);
@@ -125,7 +125,7 @@ public class MainMenu : MonoBehaviour
     {
         // - - MAIN PANEL - -
 
-        string panelPath = "UI/UI_Mainmenu/Canvas_Mainmenu/Panel_Mainmenu";
+        string panelPath = "UI/Canvas_Mainmenu/Panel_Mainmenu";
         Button tempButton;
 
         // Play button
@@ -138,7 +138,7 @@ public class MainMenu : MonoBehaviour
 
         // - - - - QUIT CONFIRMATION PANEL - - - -
 
-        panelPath = "UI/UI_Mainmenu/Canvas_Mainmenu/Panel_QuitConfirmation";
+        panelPath = "UI/Canvas_Mainmenu/Panel_QuitConfirmation";
 
         // Confirm button
         tempButton = GameObject.Find($"{panelPath}/ButtonConfirm").GetComponent<Button>();
@@ -151,7 +151,7 @@ public class MainMenu : MonoBehaviour
 
         // - - - - LEVEL SELECTION PANEL - - - -
 
-        panelPath = "UI/UI_Mainmenu/Canvas_Mainmenu/Panel_LevelSelection";
+        panelPath = "UI/Canvas_Mainmenu/Panel_LevelSelection";
 
         // Level buttons
         for(int i = 1; i < 11; i++)

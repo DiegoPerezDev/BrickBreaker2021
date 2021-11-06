@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1780429611902963411}
   - component: {fileID: 1780429611902963408}
   - component: {fileID: 1780429611902963413}
+  - component: {fileID: 3055790988568373530}
   - component: {fileID: 1780429611902963415}
   m_Layer: 0
   m_Name: Paddle
@@ -27,9 +28,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1780429611902963409}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -3.5, z: 0}
-  m_LocalScale: {x: 0.6, y: 0.55, z: 1}
+  m_LocalScale: {x: 0.55, y: 0.4, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -122,6 +123,18 @@ MonoBehaviour:
   canMoveR: 0
   canMoveL: 0
   paddleSize: {x: 0, y: 0}
+--- !u!114 &3055790988568373530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1780429611902963409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b44a9124c1d12134ebcb09ba2cafb489, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!70 &1780429611902963415
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

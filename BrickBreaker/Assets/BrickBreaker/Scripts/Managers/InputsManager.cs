@@ -59,7 +59,7 @@ public class InputsManager : MonoBehaviour
         // Don't use any input on loading sceen
         if (GameManager.loadingScene)
             return;
-        
+
         // Inputs for menu management, it's in all scenes
         MenuInputs();
 
@@ -67,7 +67,7 @@ public class InputsManager : MonoBehaviour
         if (gameplayInputsDisabled || !(GameManager.currentSceneType == GameManager.SceneType.gameplay) )
             return;
 
-        if (GameManager.currentSceneType == GameManager.SceneType.gameplay)
+        if ( (GameManager.currentSceneType == GameManager.SceneType.gameplay) && LevelManager.playing)
         {
             MovementInputs();
             ActionInputs();
@@ -86,6 +86,20 @@ public class InputsManager : MonoBehaviour
 
     #region Inputs management functions
 
+    // Change the input device to an specific one, ignoring other posible inputs. 
+    private static void SetInputMask()
+    {
+        #if UNITY_STANDALONE
+                input.bindingMask = InputBinding.MaskByGroup("pc");
+        #endif
+
+        #if UNITY_ANDROID
+                input.bindingMask = InputBinding.MaskByGroup("smartphone");
+        #endif
+
+        //input.bindingMask = new InputBinding { groups = controlScheme };
+    }
+
     /// <summary>
     /// This function set the callbacks for the inputs. Read the input actions and store the results in certain variables for afterward management.
     /// </summary>
@@ -95,32 +109,18 @@ public class InputsManager : MonoBehaviour
         input.ActionMap.Pause.performed += ctx => pause = ctx.ReadValueAsButton();
         input.ActionMap.Menu_GoBack.performed += ctx => returnToMenu = ctx.ReadValueAsButton();
 
-#if UNITY_STANDALONE
-        //Read gameplay inputs
-        input.ActionMap.LeftMove.performed += ctx => leftMove = ctx.ReadValueAsButton();
-        input.ActionMap.RightMove.performed += ctx => rightMove = ctx.ReadValueAsButton();
-        input.ActionMap.ReleaseBall.performed += ctx => releaseBall = ctx.ReadValueAsButton();
-#endif
+        //#if UNITY_STANDALONE
+            //Read gameplay inputs
+            input.ActionMap.LeftMove.performed += ctx => leftMove = ctx.ReadValueAsButton();
+            input.ActionMap.RightMove.performed += ctx => rightMove = ctx.ReadValueAsButton();
+            input.ActionMap.ReleaseBall.performed += ctx => releaseBall = ctx.ReadValueAsButton();
+        //#endif
 
-#if UNITY_ANDROID
-        //Read gameplay inputs
-        input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
-        input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
-#endif
-    }
-
-    // Change the input device to an specific one. 
-    private static void SetInputMask()
-    {
-        #if UNITY_STANDALONE
-                input.bindingMask = InputBinding.MaskByGroup("pc");
-        #endif
-
-        #if UNITY_ANDROID
-                input.bindingMask = InputBinding.MaskByGroup("android");
-        #endif
-
-        //input.bindingMask = new InputBinding { groups = controlScheme };
+        //#if UNITY_ANDROID
+            //Read gameplay inputs
+            //input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
+            //input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
+        //#endif
     }
 
     /// <summary>
@@ -164,11 +164,11 @@ public class InputsManager : MonoBehaviour
         else if (triggerMenuButton)
         {
             triggerMenuButton = false;
-#if UNITY_STANDALONE
+            //#if UNITY_STANDALONE
             Button currentButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
             if (currentButton != null)
                 currentButton.onClick.Invoke();
-#endif
+            //#endif
         }
     }
 
@@ -203,9 +203,10 @@ public class InputsManager : MonoBehaviour
 
     #endregion
 
-    #region android functions
+    /*
+    #region Smartphone functions
 
-#if UNITY_ANDROID
+    //#if UNITY_ANDROID
 
     private static void StartScreenTouched()
     {
@@ -245,9 +246,10 @@ public class InputsManager : MonoBehaviour
         leftMove = rightMove = false;
     }
 
-#endif
+    //#endif
 
-#endregion
+    #endregion
+    */
 
     #region Gameplay inputs management
 

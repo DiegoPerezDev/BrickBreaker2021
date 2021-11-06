@@ -8,14 +8,13 @@ public class Paddle : MonoBehaviour
     // Movement
     [HideInInspector] public bool? moveDirR = null;
     [HideInInspector] public bool moveBool, canMoveR, canMoveL;
-    private readonly float speed = 15f;
+    private readonly float speed = 18f;
     private float lerp;
 
     // Paddle data
     public static string paddleName = "Paddle", paddlePath = "LevelDev/Paddle";
     private Rigidbody2D rb;
     [HideInInspector] public Vector2 paddleSize;
-    private Vector2 collSize;
 
     // Screen
     private float leftScreenLimit, rightScreenLimit;
@@ -23,7 +22,7 @@ public class Paddle : MonoBehaviour
 
     // Powers
     private IEnumerator usingPower;
-    private Vector2 normalSize, shortSize, largeSize;
+    private Vector2 normalSize, shortSize, largeSize, normalScale, shortScale, largeScale;
 
     // Level management
     public static bool StartSet;
@@ -36,16 +35,19 @@ public class Paddle : MonoBehaviour
 
         // Paddle data
         rb = GetComponent<Rigidbody2D>();
-        collSize = GetComponent<CapsuleCollider2D>().size;
     }
 
     void Start()    
     {
         // Paddle data
-        paddleSize = collSize * transform.localScale; // the localscale is not the entire size because it is an sprite.
+        var coll = GetComponent<CapsuleCollider2D>();
+        paddleSize = new Vector2(coll.size.x + coll.size.y/2, coll.size.y) * transform.localScale; // the localscale is not the entire size because it is an sprite.
         normalSize = paddleSize;
-        shortSize = normalSize * 0.7f;
-        largeSize = new Vector2 (normalSize.x * 1.35f, normalSize.y);
+        shortSize = new Vector2(normalSize.x * 0.6f, normalSize.y);
+        largeSize = new Vector2 (normalSize.x * 1.3f, normalSize.y);
+        normalScale = normalSize / coll.size;
+        shortScale = shortSize / coll.size;
+        largeScale = largeSize / coll.size;
         canMoveR = canMoveL = true;
 
         // Game management
@@ -70,20 +72,21 @@ public class Paddle : MonoBehaviour
     }
 
 
+    #region Movement
+
     private void GetScreenValues()
     {
         Vector2 camPos = Camera.main.gameObject.transform.position;
         float camHeight = Camera.main.orthographicSize * 2f;
         camWidth = camHeight * Camera.main.aspect;
-        leftScreenLimit = camPos.x - (camWidth / 2);
-        rightScreenLimit = camPos.x + (camWidth / 2);
+        leftScreenLimit = camPos.x - (camWidth / 2) + ScreenBounds.blackBlockWidth;
+        rightScreenLimit = camPos.x + (camWidth / 2) - ScreenBounds.blackBlockWidth;
     }
 
     private void Move()
     {
         //  Check if the paddle is near the screen limits so it wont go outside of the screen.
         CheckLevelBounds();
-
         
         var increase = new Vector2(Mathf.Lerp(0, speed, lerp), 0f) * Time.fixedDeltaTime;
 
@@ -117,6 +120,10 @@ public class Paddle : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region powers
+
     /// <param name="power"> strings for powers are: slow, fast, short and large </param>
     public void GetPower(string power)
     {
@@ -134,25 +141,37 @@ public class Paddle : MonoBehaviour
         // Start power
         switch (power)
         {
-            case "short":
-                transform.localScale = shortSize / collSize;
+            case "small":
+                Powers.currentSizePower = Powers.Power.small;
+                transform.localScale = shortScale;
                 paddleSize = shortSize;
-                //print("short");
+                //print("small");
                 break;
 
             case "large":
-                transform.localScale = largeSize / collSize;
+                Powers.currentSizePower = Powers.Power.large;
+                transform.localScale = largeScale;
                 paddleSize = largeSize;
                 //print("large");
                 break;
+
+            default:
+                print("power name not recognized in the paddle code.");
+                usingPower = null;
+                yield break;
         }
 
         // Delay
         float delay = 0;
-        while(delay < Powers.powerTime)
+        while(delay < Powers.maxPowerTime)
         {
-            yield return null;
-            delay += Time.deltaTime;
+            float delay2 = 0;
+            while (delay2 < 0.1f)
+            {
+                yield return null;
+                delay += Time.deltaTime;
+                delay2 += Time.deltaTime;
+            }
         }
 
         // Stop power
@@ -162,8 +181,10 @@ public class Paddle : MonoBehaviour
 
     private void StopPower()
     {
-        transform.localScale = normalSize / collSize;
+        transform.localScale = normalScale;
         paddleSize = normalSize;
     }
+
+    #endregion
 
 }

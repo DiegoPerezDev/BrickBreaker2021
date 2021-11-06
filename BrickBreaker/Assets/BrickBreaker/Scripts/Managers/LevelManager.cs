@@ -16,8 +16,8 @@ public class LevelManager : MonoBehaviour
 
     // - - - GENERAL LEVEL MANAGEMENT - - -
 
-    // General management: Pause
-    public static bool pauseTrigger;
+    // General management: Pause and play
+    public static bool pauseTrigger, playing, paused;
 
     // General management: Audio
     private static AudioClip loseAudio, winAudio;
@@ -30,13 +30,16 @@ public class LevelManager : MonoBehaviour
 
     // - - - SPECIFIC LEVEL DATA - - -
 
-    // Level data
-    public static int numberOfActiveBricks;
-    public static int lives;
-    public static readonly int liveCap = 3;
+    // Level general data
     public static int levelsUnlocked = 1;
     public static readonly int maxLevels = 10;
     public static bool[] levelsDone = new bool[maxLevels];
+
+    // Level spesific data
+    public static int numberOfActiveBricks;
+    public static int lives;
+    public static readonly int liveCap = 3;
+    public static int powersSpawned;
 
     // Score
     public static int[] levelsScore = new int[maxLevels];
@@ -47,8 +50,6 @@ public class LevelManager : MonoBehaviour
     // Level objects
     private static GameObject screenBoundsPref;
     private static Ball ballCode;
-
-    // Bricks
     private static IEnumerator lastBricksCor;
 
     // Audio
@@ -57,14 +58,13 @@ public class LevelManager : MonoBehaviour
     public static AudioClip loseLifeAudio, getPowerAudio;
     public static AudioClip hitAudio, metalHitAudio, destructionAudio;
 
-    
 
     void Awake()
     {
         instance = this;
 
         // Level entering text
-        GameObject temp1 = SearchTools.TryFind("UI/UI_Gameplay/Canvas_Menu/Panel_LevelEntering/TitleTMP");
+        GameObject temp1 = SearchTools.TryFind("UI/Canvas_Menu/Panel_LevelEntering/TitleTMP");
         TextMeshProUGUI temp2;
         int actualScene = SceneManager.GetActiveScene().buildIndex - 1;
         if (temp1)
@@ -92,8 +92,8 @@ public class LevelManager : MonoBehaviour
         screenBoundsPref = SearchTools.TryLoadResource("Prefabs/LevelDev/ScreenBounds") as GameObject;
 
         // Score
-        newRecordText = SearchTools.TryFind("UI/UI_Gameplay/Canvas_Menu/Panel_Win/NewRecord");
-        var temp = SearchTools.TryFind("UI/UI_Gameplay/Canvas_Menu/Panel_Win/Score");
+        newRecordText = SearchTools.TryFind("UI/Canvas_Menu/Panel_Win/NewRecord");
+        var temp = SearchTools.TryFind("UI/Canvas_Menu/Panel_Win/Score");
         scoreImg = SearchTools.TryGetComponent<Image>(temp);
         for (int i = 0; i < 4; i++)
             scoreImgs[i] = Resources.Load<Sprite>($"Art2D/Stars/{i}stars");
@@ -103,6 +103,7 @@ public class LevelManager : MonoBehaviour
     {
         InstantiateLevelObjects();
         Pause(false);
+        playing = true;
     }
 
     void Update()
@@ -134,6 +135,7 @@ public class LevelManager : MonoBehaviour
         StopAllCoroutines();
         instance.StopAllCoroutines();
         lastBricksCor = null;
+        playing = false;
     }
 
 
@@ -150,7 +152,7 @@ public class LevelManager : MonoBehaviour
 
         // Set lifes
         lives = liveCap;
-        GameplayMenu.RewriteLife();
+        Life.RewriteLife();
 
         // Wait while the other codes of the gameplay finish setting things
         if (setCorroutine == null)
@@ -192,8 +194,11 @@ public class LevelManager : MonoBehaviour
         levelReady = true;
 
         // Level entering panel for a short time
-        yield return new WaitForSecondsRealtime(2f);
-        GameObject temp = SearchTools.TryFind("UI/UI_Gameplay/Canvas_Menu/Panel_LevelEntering");
+        if(SceneManager.GetActiveScene().buildIndex <= maxLevels + 1)
+        {
+            yield return new WaitForSecondsRealtime(2f);
+        }
+        GameObject temp = SearchTools.TryFind("UI/Canvas_Menu/Panel_LevelEntering");
         if (temp)
             temp.SetActive(false);
 
@@ -208,7 +213,6 @@ public class LevelManager : MonoBehaviour
             instance.gameObject.AddComponent<Powers>();
         GameObject screenBounds = Instantiate(screenBoundsPref, screenBoundsPref.transform.position, Quaternion.identity);
         screenBounds.transform.parent = instance.gameObject.transform;
-        screenBounds.GetComponent<ScreenBounds>().Begin();
     }
 
     #endregion
@@ -224,13 +228,16 @@ public class LevelManager : MonoBehaviour
 
         if (pausing)
         {
-            UI_Manager.OpenMenuLayer<GameplayMenu.Panels>(GameplayMenu.Panels.pause);
+            paused = true;
+            playing = false;
             AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.pause], false, 1f);
+            UI_Manager.OpenMenuLayer<GameplayMenu.Panels>(GameplayMenu.Panels.pause);
         }
         else
         {
+            paused = false;
+            playing = true;
             UI_Manager.ClosePanel();
-
             InputsManager.DisableTriggers();
         }
         InputsManager.gameplayInputsDisabled = pausing;
@@ -249,6 +256,14 @@ public class LevelManager : MonoBehaviour
             Time.timeScale = 1;
     }
 
+    void OnApplicationPause(bool pauseStatus)
+    {
+        if (!pauseStatus || GameManager.loadingScene)
+            return;
+        if (!paused)
+            PauseMenu(true);
+    }
+
     #endregion
 
     #region Win and Lose 
@@ -260,6 +275,7 @@ public class LevelManager : MonoBehaviour
     {
         // Gemeral management
         Pause(true);
+        playing = false;
 
         // Audio and UI settings
         AudioManager.StopLevelSong();
@@ -272,6 +288,8 @@ public class LevelManager : MonoBehaviour
     /// </summary>
     public static void WinGame()
     {
+        playing = false;
+
         // New record
         int currentLevel = SceneManager.GetActiveScene().buildIndex - 1; // - 1 because the levels starts on scene #2
         bool newRecord = false;
@@ -294,7 +312,7 @@ public class LevelManager : MonoBehaviour
     public static void LoseLive()
     {
         lives--;
-        GameplayMenu.RewriteLife();
+        Life.RewriteLife();
         if (lives < 1)
         {
             LoseGame();
@@ -340,8 +358,13 @@ public class LevelManager : MonoBehaviour
         float delay = 0f;
         while(delay < 15f)
         {
-            yield return null;
-            delay += Time.deltaTime;
+            float delay2 = 0f;
+            while (delay2 < 0.1f)
+            {
+                yield return null;
+                delay += Time.deltaTime;
+                delay2 += Time.deltaTime;
+            }
         }
 
         // Dont destroy the bricks if the ball is stuck

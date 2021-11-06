@@ -37,14 +37,20 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Game settings
+        Application.runInBackground = false;
+
         // Load data
         StartCoroutine(LoadGameData());
 
         // For debugging purposes
         Debug.developerConsoleVisible = true;
 
-        // Open scene
-        GoToScene(SceneManager.GetActiveScene().buildIndex);
+        var scene = SceneManager.GetActiveScene().buildIndex;
+        if (scene != 0)
+            instance.StartCoroutine(LoadScene(scene, true));
+        else
+            GoToScene(scene);
     }
 
 
@@ -58,7 +64,7 @@ public class GameManager : MonoBehaviour
     public static void GoToScene(int scene)
     {
         if (!loadingScene)
-            instance.StartCoroutine(LoadScene(scene));
+            instance.StartCoroutine(LoadScene(scene, false));
         else
             print("Could not load scene because we are already loading a scene");
     }
@@ -66,15 +72,19 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// Go to the loading scene while loading the desired scene while waiting for all of the managers to set up that scene.</para>
     /// </summary>
-    private static IEnumerator LoadScene(int scene)
+    private static IEnumerator LoadScene(int scene, bool startingInLevel)
     {
         // Set some things first
         loadingScene = true;
         UI_Manager.inMenu = true;
         AudioManager.StopAllAudio();
 
+        // If start the game in a level in developent we dont have to go to the loading scene.
+        if (startingInLevel)
+            goto AfterSceneChange;
+
         // Go to the loading scene
-        if(instance.printTransitionStates)
+        if (instance.printTransitionStates)
             print("Loading... Entering loading scene");
         currentSceneType = SceneType.load;
         AsyncOperation loadingOperation1 = SceneManager.LoadSceneAsync(1);
@@ -93,6 +103,8 @@ public class GameManager : MonoBehaviour
         {
             yield return null;
         }
+
+        AfterSceneChange:
 
         //Get the sceneType and then set the scene
         GetSceneType(scene);
@@ -130,7 +142,7 @@ public class GameManager : MonoBehaviour
         // Close the loading frame after setting all the scene.
         try
         {
-            Destroy(GameObject.Find("UI/UI_Loading"));
+            Destroy(GameObject.Find("UI/Canvas_Loading"));
         }
         catch
         {
@@ -260,7 +272,7 @@ public class GameManager : MonoBehaviour
         if (newRecord)
             LevelManager.levelsScore[currentLevel - 1] = LevelManager.lives;
 
-        SaveSystem.SaveLevelData();
+        SavingData.SaveLevelData(currentLevel);
     }
 
     public static IEnumerator LoadGameData()
@@ -272,8 +284,7 @@ public class GameManager : MonoBehaviour
             delay += Time.deltaTime;
         }
 
-        SaveData saveData = SaveSystem.LoadLevelData();
-        SaveData.LoadData(saveData);
+        SavingData.LoadData();
 
         if (LevelManager.levelsUnlocked > 1)
         {
@@ -284,4 +295,9 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
+    #region pause by minimizing
+
+    
+
+    #endregion
 }

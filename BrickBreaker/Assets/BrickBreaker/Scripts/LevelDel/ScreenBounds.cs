@@ -12,10 +12,11 @@ public class ScreenBounds : MonoBehaviour
 
     // Screen bounds objects
     private GameObject leftBound, rightBound, topBound, bottomBound;
-    private readonly float boundThickness = 1f;
+    private RectTransform leftBlock, rightBlock;
 
     // Screen and camera info
-    private float leftScreenLimit, rightScreenLimit, topScreenLimit, bottomScreenLimit;
+    private float topScreenLimit, bottomScreenLimit, rightScreenLimit, leftScreenLimit;
+    public static float blackBlockWidth;
     private float camWidth;
     private Vector2 camPos;
 
@@ -23,9 +24,14 @@ public class ScreenBounds : MonoBehaviour
     public static bool StartSet;
 
 
-    public void Begin()
+    void Awake()
     {
         GetScreenValues();
+    }
+
+    private void Start()
+    {
+        SetBlackBordorBlocks();
         CreateBoundObjects();
         ResizeBoundObjects();
         PlaceBoundObjects();
@@ -50,6 +56,20 @@ public class ScreenBounds : MonoBehaviour
         bottomScreenLimit = camPos.y - (camHeight / 2);
     }
 
+    private void SetBlackBordorBlocks()
+    {
+        string temp = "UI/Canvas_HUD";
+        leftBlock = SearchTools.TryFind($"{temp}/leftBlock").GetComponent<RectTransform>();
+        rightBlock = SearchTools.TryFind($"{temp}/Panel_RightBlock").GetComponent<RectTransform>();
+
+        // Set size
+        leftBlock.sizeDelta = rightBlock.sizeDelta = new Vector2(Camera.main.pixelWidth / 5f, leftBlock.sizeDelta.y);
+
+        // Set pos
+        leftBlock.anchoredPosition = new Vector3(leftBlock.rect.width / 2f, Camera.main.transform.position.y);
+        rightBlock.anchoredPosition = new Vector3(-rightBlock.rect.width / 2f, Camera.main.transform.position.y);
+    }
+
     private void CreateBoundObjects()
     {
         topBound = new GameObject("TopBound");
@@ -64,28 +84,28 @@ public class ScreenBounds : MonoBehaviour
         leftBound = new GameObject("LeftBound");
         leftBound.AddComponent<BoxCollider2D>();
         leftBound.transform.parent = gameObject.transform;
-        //leftBound.transform.Rotate(0f, 0f, -1f, Space.Self);
 
         rightBound = new GameObject("RightBound");
         rightBound.AddComponent<BoxCollider2D>();
         rightBound.transform.parent = gameObject.transform;
-        //rightBound.transform.Rotate(0f, 0f, 1f, Space.Self);
     }
 
     private void ResizeBoundObjects()
     {
-        topBound.transform.localScale = new Vector3(camWidth, boundThickness, topBound.transform.localScale.z);
-        bottomBound.transform.localScale = new Vector3(camWidth, boundThickness, bottomBound.transform.localScale.z);
-        leftBound.transform.localScale = new Vector3(boundThickness, topScreenLimit - bottomScreenLimit,  leftBound.transform.localScale.z);
-        rightBound.transform.localScale = new Vector3(boundThickness, topScreenLimit - bottomScreenLimit, rightBound.transform.localScale.z);
+        topBound.transform.localScale = new Vector3(camWidth, 1f, topBound.transform.localScale.z);
+        bottomBound.transform.localScale = new Vector3(camWidth, 1f, bottomBound.transform.localScale.z);
+        //The lateral bound colliders are not resizing with the screen dynamic resize.
+        blackBlockWidth = camWidth * rightBlock.sizeDelta.x / Camera.main.pixelWidth;
+        leftBound.transform.localScale = new Vector3(blackBlockWidth, topScreenLimit - bottomScreenLimit,  leftBound.transform.localScale.z);
+        rightBound.transform.localScale = new Vector3(blackBlockWidth, topScreenLimit - bottomScreenLimit, rightBound.transform.localScale.z);
     }
 
     private void PlaceBoundObjects()
     {
-        topBound.transform.position = new Vector3(camPos.x, topScreenLimit + boundThickness/2, topBound.transform.position.z);
-        bottomBound.transform.position = new Vector3(camPos.x, bottomScreenLimit - boundThickness, bottomBound.transform.position.z);
-        leftBound.transform.position = new Vector3(leftScreenLimit - boundThickness / 2, camPos.y, leftBound.transform.position.z);
-        rightBound.transform.position = new Vector3(rightScreenLimit + boundThickness / 2, camPos.y, rightBound.transform.position.z);
+        topBound.transform.position = new Vector3(camPos.x, topScreenLimit + 1f / 2f, topBound.transform.position.z);
+        bottomBound.transform.position = new Vector3(camPos.x, bottomScreenLimit - 1f, bottomBound.transform.position.z);
+        leftBound.transform.position = new Vector3(leftBlock.position.x, camPos.y, leftBound.transform.position.z);
+        rightBound.transform.position = new Vector3(rightBlock.position.x, rightBound.transform.position.z);
     }
 
 }
