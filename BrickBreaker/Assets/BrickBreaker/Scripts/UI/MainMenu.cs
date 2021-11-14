@@ -43,13 +43,6 @@ public class MainMenu : MonoBehaviour
         // Set buttons
         AssignMainmenuButtonsListener();
 
-        // Enable the levels done
-        for (int a = 1; a < LevelManager.maxLevels; a++)
-        {
-            if (LevelManager.levelsDone[a])
-                levelButtons[a].SetActive(true);
-        }
-
         // Set menus
         UI_Manager.currentMenuLayer = 1;
         for (int i = 0; i < openedMenus.Length; i++)

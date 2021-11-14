@@ -29,12 +29,14 @@ public class ScreenBounds : MonoBehaviour
         GetScreenValues();
     }
 
-    private void Start()
+    void Start()
     {
         SetBlackBordorBlocks();
         CreateBoundObjects();
         ResizeBoundObjects();
         PlaceBoundObjects();
+
+        Paddle.GetScreenLimits();
         StartSet = true;
     }
 
@@ -63,7 +65,9 @@ public class ScreenBounds : MonoBehaviour
         rightBlock = SearchTools.TryFind($"{temp}/Panel_RightBlock").GetComponent<RectTransform>();
 
         // Set size
-        leftBlock.sizeDelta = rightBlock.sizeDelta = new Vector2(Camera.main.pixelWidth / 5f, leftBlock.sizeDelta.y);
+        float blockWeight = Camera.main.pixelWidth / 6f;
+        blockWeight += blockWeight * 0.2f;
+        leftBlock.sizeDelta = rightBlock.sizeDelta = new Vector2(blockWeight, leftBlock.sizeDelta.y);
 
         // Set pos
         leftBlock.anchoredPosition = new Vector3(leftBlock.rect.width / 2f, Camera.main.transform.position.y);

@@ -122,28 +122,6 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""f9fd7eba-001b-4d09-8830-36ecf6f5bc43"",
-                    ""path"": ""<Keyboard>/escape"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""pc"",
-                    ""action"": ""Menu_GoBack"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""54a128df-f821-4327-b1c8-65a067099bd8"",
-                    ""path"": ""*/{Back}"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""smartphone"",
-                    ""action"": ""Menu_GoBack"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""2ce34291-d29b-4825-9c12-dcd176b5bb62"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
@@ -177,17 +155,6 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""c9fa49b5-97eb-47a8-a168-9e9f2223c091"",
-                    ""path"": ""*/{Back}"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""smartphone"",
-                    ""action"": ""Pause"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""c708741b-e7e6-4b7e-a8d4-6c22490dbd76"",
                     ""path"": ""<Touchscreen>/press"",
                     ""interactions"": """",
@@ -205,6 +172,17 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""processors"": """",
                     ""groups"": ""smartphone"",
                     ""action"": ""TouchPosition"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f9fd7eba-001b-4d09-8830-36ecf6f5bc43"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""Menu_GoBack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }

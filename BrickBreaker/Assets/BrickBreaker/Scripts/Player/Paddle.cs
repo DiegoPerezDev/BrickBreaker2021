@@ -17,8 +17,8 @@ public class Paddle : MonoBehaviour
     [HideInInspector] public Vector2 paddleSize;
 
     // Screen
-    private float leftScreenLimit, rightScreenLimit;
-    private float camWidth;
+    private static float leftScreenLimit, rightScreenLimit;
+    private static float camWidth;
 
     // Powers
     private IEnumerator usingPower;
@@ -62,11 +62,7 @@ public class Paddle : MonoBehaviour
     void FixedUpdate()
     {
         if (moveBool)
-        {
-            if (lerp < 1)
-                lerp += Time.fixedDeltaTime * 5;
             Move();
-        }
         else
             lerp = 0f;
     }
@@ -79,44 +75,54 @@ public class Paddle : MonoBehaviour
         Vector2 camPos = Camera.main.gameObject.transform.position;
         float camHeight = Camera.main.orthographicSize * 2f;
         camWidth = camHeight * Camera.main.aspect;
-        leftScreenLimit = camPos.x - (camWidth / 2) + ScreenBounds.blackBlockWidth;
-        rightScreenLimit = camPos.x + (camWidth / 2) - ScreenBounds.blackBlockWidth;
+        leftScreenLimit = camPos.x - (camWidth / 2);
+        rightScreenLimit = camPos.x + (camWidth / 2);
+    }
+
+    public static void GetScreenLimits()
+    {
+        leftScreenLimit += ScreenBounds.blackBlockWidth;
+        rightScreenLimit -= ScreenBounds.blackBlockWidth;
     }
 
     private void Move()
     {
-        //  Check if the paddle is near the screen limits so it wont go outside of the screen.
-        CheckLevelBounds();
-        
         var increase = new Vector2(Mathf.Lerp(0, speed, lerp), 0f) * Time.fixedDeltaTime;
+        bool moved = false;
+        Vector2 nextPos;
 
         if (moveDirR == true)
         {
-            if(canMoveR)
-                rb.MovePosition(rb.position + increase);
+            nextPos = rb.position + increase;
+            var rightPaddleBorder = nextPos.x + (paddleSize.x / 2);
+            if (rightPaddleBorder < rightScreenLimit)
+            {
+                rb.MovePosition(nextPos);
+                moved = true;
+            }
+            else if (rightPaddleBorder > rightScreenLimit)
+                rb.position = new Vector2(rightScreenLimit - (paddleSize.x / 2), rb.position.y);
         }
         else if (moveDirR == false)
         {
-            if (canMoveL)
-                rb.MovePosition(rb.position - increase);
+            nextPos = rb.position - increase;
+            var leftPaddleBorder = nextPos.x - (paddleSize.x / 2);
+            if (leftPaddleBorder > leftScreenLimit)
+            {
+                rb.MovePosition(nextPos);
+                moved = true;
+            }
+            else if(leftPaddleBorder < leftScreenLimit)
+                rb.position = new Vector2(leftScreenLimit + (paddleSize.x / 2), rb.position.y);
         }
-    }
+        else
+            return;
 
-    private void CheckLevelBounds()
-    {
-        if ((rb.position.x - (paddleSize.x / 2)) <= leftScreenLimit)
+        // Increase lerp of the movement only when we move
+        if (moved)
         {
-            canMoveR = true;
-            canMoveL = false;
-        }
-        else if ((rb.position.x + (paddleSize.x / 2)) >= rightScreenLimit)
-        {
-            canMoveR = false;
-            canMoveL = true;
-        }
-        else if (!canMoveR || !canMoveL)
-        {
-            canMoveR = canMoveL = true;
+            if (lerp < 1)
+                lerp += Time.fixedDeltaTime * 5;
         }
     }
 
@@ -125,7 +131,7 @@ public class Paddle : MonoBehaviour
     #region powers
 
     /// <param name="power"> strings for powers are: slow, fast, short and large </param>
-    public void GetPower(string power)
+    public void GetPower(PowersSystem.Power power)
     {
         if(usingPower != null)
         {
@@ -136,20 +142,18 @@ public class Paddle : MonoBehaviour
         StartCoroutine(usingPower);
     }
 
-    private IEnumerator Power(string power)
+    private IEnumerator Power(PowersSystem.Power power)
     {
         // Start power
         switch (power)
         {
-            case "small":
-                Powers.currentSizePower = Powers.Power.small;
+            case PowersSystem.Power.small:
                 transform.localScale = shortScale;
                 paddleSize = shortSize;
                 //print("small");
                 break;
 
-            case "large":
-                Powers.currentSizePower = Powers.Power.large;
+            case PowersSystem.Power.large:
                 transform.localScale = largeScale;
                 paddleSize = largeSize;
                 //print("large");
@@ -163,10 +167,10 @@ public class Paddle : MonoBehaviour
 
         // Delay
         float delay = 0;
-        while(delay < Powers.maxPowerTime)
+        while(delay < PowersSystem.maxPowerTime)
         {
             float delay2 = 0;
-            while (delay2 < 0.1f)
+            while (delay2 < 0.05f)
             {
                 yield return null;
                 delay += Time.deltaTime;

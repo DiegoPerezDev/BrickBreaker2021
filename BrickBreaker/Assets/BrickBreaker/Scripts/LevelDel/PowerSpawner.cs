@@ -35,7 +35,7 @@ public class PowerSpawner : MonoBehaviour
     private void SpawnPower()
     {
         // Spawn random power
-        LevelManager.powersSpawned++;
+        PowersSystem.powersSpawned++;
         int power = Random.Range(1, 5);
         GameObject powerToSpawn = null;
         string path = "Prefabs/LevelDev/Powers";

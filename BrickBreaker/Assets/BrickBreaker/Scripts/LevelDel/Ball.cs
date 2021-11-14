@@ -31,15 +31,17 @@ public class Ball : MonoBehaviour
     // Unstuck process
     public static bool unstuckBallTrigger, hitObject;
     public static bool stuck;
+    private IEnumerator stuckCor;
 
     // Game Management
     public static bool StartSet;
 
 
-    private void Awake()
+    void Awake()
     {
         // For unstuck
-        StartCoroutine(CheckStuck());
+        stuckCor = CheckStuck();
+        StartCoroutine(stuckCor);
 
         // Audiovisuals
         ballHitAudio = Resources.Load<AudioClip>("Audio/Level objects/(lo1) ballHit");
@@ -59,10 +61,10 @@ public class Ball : MonoBehaviour
     {
         // Speed
         int level = SceneManager.GetActiveScene().buildIndex - 1;
-        if (level > 6)
-            level = 7;
-        startSpeed = 5f + level * 0.5f;
-        maxSpeed = 7.75f + level * 0.75f;
+        if (level >= 6)
+            level = 6;
+        startSpeed = 4.5f + level * 0.25f;
+        maxSpeed = 2.5f + startSpeed;
         speed = startSpeed;
     }
 
@@ -74,12 +76,12 @@ public class Ball : MonoBehaviour
             UnstuckBall();
         }
 
-        if (speed < startSpeed)
-            print("slow ball");
-        else if (speed > maxSpeed)
-            print("fast ball");
-        else
-            print("normal ball");
+        //if (speed < startSpeed)
+        //    print("slow ball");
+        //else if (speed > maxSpeed)
+        //    print("fast ball");
+        //else
+        //    print("normal ball");
     }
 
     void FixedUpdate()
@@ -93,6 +95,7 @@ public class Ball : MonoBehaviour
 
     void OnDestroy()
     {
+        StopCoroutine(stuckCor);
         StopAllCoroutines();
         StartSet = false;
         ballReleased = false;
@@ -152,7 +155,8 @@ public class Ball : MonoBehaviour
     {
         trail.enabled = true;
         rb.velocity = new Vector2(0f, speed = startSpeed);
-        StopCoroutine(ballSpeedCor);
+        if(ballSpeedCor != null)
+            StopCoroutine(ballSpeedCor);
         ballSpeedCor = SpeedIncrese();
         StartCoroutine(ballSpeedCor);
         AudioManager.PlayAudio(audioSource, ballReleaseAudio, false, 0.9f);
@@ -174,13 +178,12 @@ public class Ball : MonoBehaviour
             trail.Clear();
             trail.enabled = false;
             // Prevent multiple losing or losing when setting the game
-            if (LevelManager.lives > 0)
+            if (PlayerLife.lives > 0)
                 LevelManager.LoseLive();
             return;
         }
 
         AudioManager.PlayAudio(audioSource, ballHitAudio, false, 0.5f);
-        ContactPoint2D contact = collision.GetContact(0);
 
         if (collision.gameObject.CompareTag("Player"))
         {
@@ -188,18 +191,17 @@ public class Ball : MonoBehaviour
             hitObject = true;
 
             // Get the reflect direction of the ball in the paddle, its different because it may change the ball dir in the x axis
-            if (VelAfterPaddleColl(contact))
+            if (VelAfterPaddleColl(collision.GetContact(0)))
                 return;
         }
-
-        if (collision.gameObject.CompareTag("Brick"))
+        else if (collision.gameObject.CompareTag("Brick"))
         {
             // For unstuck purposes
             hitObject = true;
 
             // Count the remaining bricks for knowing when to win
             collision.gameObject.GetComponent<Bricks>().GotHit();
-            LevelManager.CheckNumberOfBricks();
+            BricksSystem.CheckNumberOfBricks();
         }
         else if(collision.gameObject.CompareTag("MetalBrick"))
         {
@@ -281,7 +283,8 @@ public class Ball : MonoBehaviour
 
     public void RestartBall()
     {
-        StopCoroutine(ballSpeedCor);
+        if(ballSpeedCor != null)
+            StopCoroutine(ballSpeedCor);
         StopAllCoroutines();
         ballReleased = false;
         rb.velocity = Vector3.zero;
@@ -300,7 +303,7 @@ public class Ball : MonoBehaviour
         {
             //print("Increasing ball speed.");
             float delay2 = 0;
-            while (delay2 < 0.1f)
+            while (delay2 < 0.05f)
             {
                 yield return null;
                 delay += Time.deltaTime;
@@ -319,6 +322,7 @@ public class Ball : MonoBehaviour
         {
             print("maxSpeed reached");
             maxSpeedReached = true;
+            rb.velocity = Vector3.Normalize(vel) * maxSpeed;
         }
         else
             RestartSpeedIncreseCor();
@@ -326,7 +330,8 @@ public class Ball : MonoBehaviour
 
     private void RestartSpeedIncreseCor()
     {
-        StopCoroutine(ballSpeedCor);
+        if(ballSpeedCor != null)
+            StopCoroutine(ballSpeedCor);
         if (!usingSpeedPower)
         {
             ballSpeedCor = SpeedIncrese();
@@ -345,15 +350,10 @@ public class Ball : MonoBehaviour
     {
         // delay
         float delay = 0f;
-        while (delay < 0.5f)
+        while (delay < 0.05f)
         {
-            float delay2 = 0f;
-            while (delay2 < 0.1f)
-            {
-                yield return null;
-                delay += Time.deltaTime;
-                delay2 += Time.deltaTime;
-            }
+            yield return null;
+            delay += Time.deltaTime;
         }
 
         // Dont check stuck if we haven't released the ball
@@ -363,11 +363,11 @@ public class Ball : MonoBehaviour
         if (!stuck)
         {
             // Check if we have hit something important in the past seconds
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 3; i++)
             {
                 // delay
                 delay = 0f;
-                while (delay < 0.5f)
+                while (delay < 1f)
                 {
                     float delay2 = 0f;
                     while (delay2 < 0.1f)
@@ -381,6 +381,8 @@ public class Ball : MonoBehaviour
                 if (hitObject)
                 {
                     hitObject = false;
+                    if(GameplayMenu.unstuckButton.activeInHierarchy)
+                        GameplayMenu.unstuckButton.SetActive(false);
                     goto RepeatCor;
                 }
             }
@@ -399,9 +401,21 @@ public class Ball : MonoBehaviour
             }
         }
 
-        // If we are not stuck
-        RepeatCor:
-        StartCoroutine(CheckStuck());
+    // If we are not stuck
+    RepeatCor:
+        RepeatStuckCheck();
+        
+    }
+
+    private void RepeatStuckCheck()
+    {
+        if (stuckCor != null)
+        {
+            StopCoroutine(stuckCor);
+            stuckCor = null;
+        }
+        stuckCor = CheckStuck();
+        StartCoroutine(stuckCor);
     }
 
     private void UnstuckBall()
@@ -426,10 +440,8 @@ public class Ball : MonoBehaviour
 
     #region powers
 
-    public void BallSpeedPower(string power, Powers.Power newPower)
+    public void BallSpeedPower(PowersSystem.Power power)
     {
-        if (!ValidatePowerName(power))
-            return;
         if(ballSpeedCor != null)
             StopCoroutine(ballSpeedCor);
         if (usingSpeedPower)
@@ -438,47 +450,30 @@ public class Ball : MonoBehaviour
         StartCoroutine(ballSpeedCor);
     }
 
-    private bool ValidatePowerName(string power)
-    {
-        bool answer = false;
-        switch (power)
-        {
-            case "slow":
-            case "fast":
-                answer = true;
-                break;
-        }
-        return answer;
-    }
-
-    private IEnumerator BallPower(string power)
+    private IEnumerator BallPower(PowersSystem.Power power)
     {
         var vel = rb.velocity;
         switch (power)
         {
-            case "slow":
-                Powers.currentSpeedPower = Powers.Power.slow;
+            case PowersSystem.Power.slow:
                 if (!usingSpeedPower)
                     currentNormalSpeed = speed;
                 speed = startSpeed * 0.7f;
-                if (vel.magnitude > 0)
-                    rb.velocity = Vector3.Normalize(vel) * speed;
+                rb.velocity = Vector3.Normalize(vel) * speed;
                 break;
 
-            case "fast":
-                Powers.currentSpeedPower = Powers.Power.fast;
+            case PowersSystem.Power.fast:
                 if (!usingSpeedPower)
                     currentNormalSpeed = speed;
-                speed = maxSpeed * 1.3f;
-                if (vel.magnitude > 0)
-                    rb.velocity = Vector3.Normalize(vel) * speed;
+                speed = maxSpeed * 1.4f;
+                rb.velocity = Vector3.Normalize(vel) * speed;
                 break;
         }
 
         usingSpeedPower = true;
 
         // Delay
-        for (int i = 0; i < Powers.maxPowerTime; i++)
+        for (int i = 0; i < PowersSystem.maxPowerTime; i++)
         {
             float delay = 0;
             while (delay < 1f)
@@ -500,16 +495,20 @@ public class Ball : MonoBehaviour
     private void StopSpeedPower()
     {
         usingSpeedPower = false;
-        Powers.currentSpeedPower = Powers.Power.none;
+        PowersSystem.currentSpeedPower = PowersSystem.Power.none;
 
         speed = currentNormalSpeed;
         if (!maxSpeedReached)
         {
             ballSpeedCor = SpeedIncrese();
+            rb.velocity = Vector3.Normalize(rb.velocity) * speed;
             StartCoroutine(ballSpeedCor);
         }
         else
+        {
             ballSpeedCor = null;
+            rb.velocity = Vector3.Normalize(rb.velocity) * maxSpeed;
+        }
         //print("speed power ended.");
     }
 

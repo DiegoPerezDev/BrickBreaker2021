@@ -82,8 +82,6 @@ public class GameplayMenu : MonoBehaviour
 
     private static void AssignHUDButtonsListener()
     {
-        // - - - - HUD CANVAS - - - -
-
         Button tempButton;
         string panelPath = "UI/Canvas_HUD";
 
@@ -91,13 +89,15 @@ public class GameplayMenu : MonoBehaviour
         tempButton = GameObject.Find(panelPath + "/ButtonUnstuck").GetComponent<Button>();
         tempButton.onClick.AddListener(delegate { HUDButtonsActions("unstuck"); });
 
-        // - - - - RIGHTBLOCK PANEL - - - -
-
         panelPath = "UI/Canvas_HUD/Panel_RightBlock";
 
         // Pause button
         tempButton = GameObject.Find(panelPath + "/PauseButton").GetComponent<Button>();
         tempButton.onClick.AddListener(delegate { HUDButtonsActions("pause"); });
+
+        // Launch ball button
+        tempButton = GameObject.Find(panelPath + "/LaunchBallButton").GetComponent<Button>();
+        tempButton.onClick.AddListener(delegate { HUDButtonsActions("launchball"); });
     }
 
     private static void HUDButtonsActions(string button)
@@ -114,6 +114,13 @@ public class GameplayMenu : MonoBehaviour
             case "unstuck":
                 Ball.unstuckBallTrigger = true;
                 Ball.hitObject = true;
+                break;
+
+            case "launchball":
+                InputsManager.releaseBall = true;
+                GameObject thisButton = GameObject.Find("UI/Canvas_HUD/Panel_RightBlock/LaunchBallButton");
+                if(thisButton != null)
+                    Destroy(thisButton);
                 break;
 
             default:
@@ -280,4 +287,5 @@ public class GameplayMenu : MonoBehaviour
     }
 
     #endregion
+
 }

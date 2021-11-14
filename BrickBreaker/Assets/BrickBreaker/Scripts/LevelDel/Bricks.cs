@@ -27,7 +27,7 @@ public class Bricks : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if ( (brickNum > 1) && (brickNum < 6) )
             brokenBrickSprite = Resources.Load<Sprite>($"Art2D/BrokenBricks/Brick0{brickNum}");
-        breakAnimationPref = Resources.Load<GameObject>($"Prefabs/LevelDev/Bricks/Brick0{brickNum}_ParticleSystem");
+        breakAnimationPref = Resources.Load<GameObject>($"Prefabs/LevelDev/Bricks_ParticleSystems/Brick0{brickNum}_ParticleSystem");
     }
 
     void Start()
@@ -46,7 +46,7 @@ public class Bricks : MonoBehaviour
         // Check if one of the indestructible bricks
         if (brickNum > 6)
         {
-            AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.metalHitAudio, transform.parent.gameObject, false, 0.35f);
+            AudioManager.PlayAudio_WithoutInterruption(ref BricksSystem.bricksAudioSources, BricksSystem.metalHitAudio, transform.parent.gameObject, false, 0.35f);
             return;
         }
 
@@ -56,7 +56,7 @@ public class Bricks : MonoBehaviour
         // Change the brick sprite to another that looks breaking when the brick reach half of its life
         if (currentLife > 0)
         {
-            AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.hitAudio, transform.parent.gameObject, false, 0.7f);
+            AudioManager.PlayAudio_WithoutInterruption(ref BricksSystem.bricksAudioSources, BricksSystem.hitAudio, transform.parent.gameObject, false, 0.7f);
 
             // Animation of the brick when hit
             if (animCorroutine == null)
@@ -85,9 +85,8 @@ public class Bricks : MonoBehaviour
 
     public void DestroyBrick()
     {
-        AudioManager.PlayAudio_WithoutInterruption(ref LevelManager.bricksAudioSources, LevelManager.destructionAudio, transform.parent.gameObject, false, 0.7f);
+        AudioManager.PlayAudio_WithoutInterruption(ref BricksSystem.bricksAudioSources, BricksSystem.destructionAudio, transform.parent.gameObject, false, 0.7f);
         Instantiate(breakAnimationPref, transform.position, Quaternion.identity);
-        LevelManager.numberOfActiveBricks--;
         MaySpawnPower();
         Destroy(gameObject);
     }
@@ -95,7 +94,7 @@ public class Bricks : MonoBehaviour
     private void MaySpawnPower()
     {
         // Limit the amount of powers in the scene
-        if (LevelManager.powersSpawned >= 3)
+        if (PowersSystem.powersSpawned >= 2)
             return;
 
         // Chance to spawn a power
@@ -103,10 +102,10 @@ public class Bricks : MonoBehaviour
             return;
 
         // Spawn random power
-        LevelManager.powersSpawned++;
+        PowersSystem.powersSpawned++;
         int power = Random.Range(1, 5);
         GameObject powerToSpawn = null;
-        string path = "Prefabs/LevelDev/Powers";
+        string path = "Prefabs/LevelDev/PowersSystem";
         switch (power)
         {
             case 1:

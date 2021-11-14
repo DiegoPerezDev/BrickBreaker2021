@@ -116,11 +116,11 @@ public class InputsManager : MonoBehaviour
             input.ActionMap.ReleaseBall.performed += ctx => releaseBall = ctx.ReadValueAsButton();
         //#endif
 
-        //#if UNITY_ANDROID
+        #if UNITY_ANDROID
             //Read gameplay inputs
-            //input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
-            //input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
-        //#endif
+            input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
+            input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
+        #endif
     }
 
     /// <summary>
@@ -203,10 +203,9 @@ public class InputsManager : MonoBehaviour
 
     #endregion
 
-    /*
     #region Smartphone functions
 
-    //#if UNITY_ANDROID
+#if UNITY_ANDROID
 
     private static void StartScreenTouched()
     {
@@ -215,10 +214,11 @@ public class InputsManager : MonoBehaviour
         // Set the paddle movement and the ball release inputs for each case
         Vector2 touchPos = input.ActionMap.TouchPosition.ReadValue<Vector2>();
         var screenWidth = Screen.width;
+        var screenHeight = Screen.height;
 
         if(!rightMove)
         {
-            if ((touchPos.x > screenWidth * 2f / 3f))
+            if ( (touchPos.x > screenWidth * 4f / 5f) && (touchPos.y > (screenHeight * 3 / 4f)) )
             {
                 rightMove = true;
                 return;
@@ -226,15 +226,11 @@ public class InputsManager : MonoBehaviour
         }
         if(!leftMove)
         {
-            if ((touchPos.x < screenWidth / 3f) && (touchPos.x > 0))
+            if ((touchPos.x < screenWidth / 5f) && (touchPos.y > (screenHeight * 3 / 4f)) )
             {
                 leftMove = true;
                 return;
             }
-        }
-        if(!releaseBall)
-        {
-            releaseBall = true;
         }
     }
 
@@ -246,10 +242,9 @@ public class InputsManager : MonoBehaviour
         leftMove = rightMove = false;
     }
 
-    //#endif
+#endif
 
     #endregion
-    */
 
     #region Gameplay inputs management
 
@@ -285,10 +280,16 @@ public class InputsManager : MonoBehaviour
             if (!Ball.ballReleased)
             {
                 Ball.ballReleased = true;
+
+                // desable launch button
+                GameObject launchButton = GameObject.Find("UI/Canvas_HUD/Panel_RightBlock/LaunchBallButton");
+                if (launchButton != null)
+                    Destroy(launchButton);
+
+                // release ball
                 GameObject ballGO = SearchTools.TryFind(Ball.ballName);
                 Ball ball = SearchTools.TryGetComponent<Ball>(ballGO);
-                if (ball)
-                    ball.ReleaseBall();
+                ball.ReleaseBall();
             }
         }
     }

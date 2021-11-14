@@ -1,22 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MyTools;
 using TMPro;
 using UnityEngine.UI;
 
 public class PowerTimer : MonoBehaviour
 {
     // Data
-    [Tooltip("0 for size power, 1 for speed power")]
-    [Range(0, 1)] [SerializeField] private int powerType;
     private int counter;
     private IEnumerator coroutine;
 
     // Components
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private Image regressionImage, powerImage;
-    [SerializeField] private readonly Sprite[] powersImages = new Sprite[4];
+    private readonly Sprite[] powersImages = new Sprite[4];
 
 
     void Awake()
@@ -40,36 +37,50 @@ public class PowerTimer : MonoBehaviour
     }
 
 
-    public void StartPowerTimer(Powers.PowerType powerType, Powers.Power newPower)
+    public void StartPowerTimer(PowersSystem.PowerType powerType, PowersSystem.Power newPower)
     {
-        // restart time if catch the same active power, or replace it if its a new one
+        // restart time if paddle catches the same active power, or replace it if its a new one
         if (coroutine != null)
         {
-            if (Powers.currentSizePower == newPower)
+            switch(powerType)
             {
-                ResetCounter();
-                return;
+                case PowersSystem.PowerType.size:
+                    if (PowersSystem.currentSizePower == newPower)
+                    {
+                        ResetCounter();
+                        return;
+                    }
+                    break;
+
+                case PowersSystem.PowerType.speed:
+                    if (PowersSystem.currentSpeedPower == newPower)
+                    {
+                        ResetCounter();
+                        return;
+                    }
+                    break;
             }
-            else
-            {
+
+            if(coroutine != null)
                 StopCoroutine(coroutine);
-                ResetPowerCoroutine(powerType);
-            }
+            ResetPowerCoroutine(powerType);
         }
 
         // Enable timer
         gameObject.SetActive(true);
 
         // Change the power image if needed
-        if (powerType == Powers.PowerType.size)
+        switch (powerType)
         {
-            if (newPower != Powers.currentSizePower)
-                powerImage.sprite = powersImages[(int)newPower - 1];
-        }
-        else if (powerType == Powers.PowerType.speed)
-        {
-            if (newPower != Powers.currentSpeedPower)
-                powerImage.sprite = powersImages[(int)newPower - 1];
+            case PowersSystem.PowerType.size:
+                if (newPower != PowersSystem.previousSizePower)
+                    powerImage.sprite = powersImages[(int)newPower - 1];
+                break;
+
+            case PowersSystem.PowerType.speed:
+                if (newPower != PowersSystem.previousSpeedPower)
+                    powerImage.sprite = powersImages[(int)newPower - 1];
+                break;
         }
 
         // Start the counter
@@ -77,17 +88,17 @@ public class PowerTimer : MonoBehaviour
         StartCoroutine(coroutine);
     }
 
-    private IEnumerator PowerTimerCor(Powers.PowerType powerType)
+    private IEnumerator PowerTimerCor(PowersSystem.PowerType powerType)
     {
         // count each second of the timer
         ResetCounter();
-        while(counter < Powers.maxPowerTime)
+        while(counter < PowersSystem.maxPowerTime)
         {
             float delay = 0;
             while (delay < 1f)
             {
                 float delay2 = 0;
-                while (delay2 < 0.1f)
+                while (delay2 < 0.05f)
                 {
                     yield return null;
                     delay += Time.deltaTime;
@@ -95,25 +106,25 @@ public class PowerTimer : MonoBehaviour
                 }
             }
             counter++;
-            regressionImage.fillAmount = 1f - (counter / Powers.maxPowerTime);
-            timerText.text = (Powers.maxPowerTime - counter).ToString();
+            regressionImage.fillAmount = 1f - (counter / PowersSystem.maxPowerTime);
+            timerText.text = (PowersSystem.maxPowerTime - counter).ToString();
         }
 
         // Disable timer
         regressionImage.fillAmount = 1f;
-        timerText.text = Powers.maxPowerTime.ToString();
+        timerText.text = PowersSystem.maxPowerTime.ToString();
         gameObject.SetActive(false);
 
         // Restart coroutine
         ResetPowerCoroutine(powerType);
     }
 
-    private void ResetPowerCoroutine(Powers.PowerType powerType)
+    private void ResetPowerCoroutine(PowersSystem.PowerType powerType)
     {
-        if (powerType == Powers.PowerType.size)
-            Powers.currentSizePower = Powers.Power.none;
-        else if (powerType == Powers.PowerType.speed)
-            Powers.currentSpeedPower = Powers.Power.none;
+        if (powerType == PowersSystem.PowerType.size)
+            PowersSystem.currentSizePower = PowersSystem.Power.none;
+        else if (powerType == PowersSystem.PowerType.speed)
+            PowersSystem.currentSpeedPower = PowersSystem.Power.none;
         coroutine = null;
         counter = 0;
     }
@@ -122,7 +133,7 @@ public class PowerTimer : MonoBehaviour
     {
         counter = 0;
         regressionImage.fillAmount = 1f;
-        timerText.text = Powers.maxPowerTime.ToString();
+        timerText.text = PowersSystem.maxPowerTime.ToString();
     }
 
 }

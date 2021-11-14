@@ -4,14 +4,42 @@ using UnityEngine;
 
 public class PowerCapsules : MonoBehaviour
 {
-    [Tooltip("The correct strings for powers are: slow, fast, short and large")]
+    [Tooltip("The correct strings for powers are: slow, fast, small and large")]
     [SerializeField] private string power;
-    
+    private PowersSystem.Power capsulePower;
+
+
+    void Start()
+    {
+        switch(power)
+        {
+            case "slow":
+                capsulePower = PowersSystem.Power.slow;
+                break;
+
+            case "fast":
+                capsulePower = PowersSystem.Power.fast;
+                break;
+
+            case "small":
+                capsulePower = PowersSystem.Power.small;
+                break;
+
+            case "large":
+                capsulePower = PowersSystem.Power.large;
+                break;
+
+            default:
+                print("Power name not recognized by a power capsule.");
+                Debug.Break();
+                break;
+        }
+    }
 
     void OnDestroy()
     {
-        if (LevelManager.powersSpawned > 0)
-            LevelManager.powersSpawned--;
+        if (PowersSystem.powersSpawned > 0)
+            PowersSystem.powersSpawned--;
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -22,30 +50,34 @@ public class PowerCapsules : MonoBehaviour
         }
         else if (collision.CompareTag("Player"))
         {
-            switch (power)
+            switch (capsulePower)
             {
-                case "small":
-                    Powers.nextPower = Powers.Power.small;
-                    Powers.newPowerType = Powers.PowerType.size;
-                    collision.gameObject.GetComponent<Paddle>().GetPower(power);
+                case PowersSystem.Power.small:
+                    PowersSystem.previousSizePower = PowersSystem.currentSizePower;
+                    PowersSystem.currentSizePower = capsulePower;
+                    PowersSystem.sizePowerTimer.StartPowerTimer(PowersSystem.PowerType.size, PowersSystem.currentSizePower);
+                    collision.gameObject.GetComponent<Paddle>().GetPower(capsulePower);
                     break;
 
-                case "large":
-                    Powers.nextPower = Powers.Power.large;
-                    Powers.newPowerType = Powers.PowerType.size;
-                    collision.gameObject.GetComponent<Paddle>().GetPower(power);
+                case PowersSystem.Power.large:
+                    PowersSystem.previousSizePower = PowersSystem.currentSizePower;
+                    PowersSystem.currentSizePower = capsulePower;
+                    PowersSystem.sizePowerTimer.StartPowerTimer(PowersSystem.PowerType.size, PowersSystem.currentSizePower);
+                    collision.gameObject.GetComponent<Paddle>().GetPower(capsulePower);
                     break;
 
-                case "slow":
-                    Powers.nextPower = Powers.Power.slow;
-                    Powers.newPowerType = Powers.PowerType.speed;
-                    GameObject.Find(Ball.ballPath).GetComponent<Ball>().BallSpeedPower(power, Powers.nextPower);
+                case PowersSystem.Power.slow:
+                    PowersSystem.previousSpeedPower = PowersSystem.currentSpeedPower;
+                    PowersSystem.currentSpeedPower = capsulePower;
+                    PowersSystem.speedPowerTimer.StartPowerTimer(PowersSystem.PowerType.speed, PowersSystem.currentSpeedPower);
+                    GameObject.Find(Ball.ballPath).GetComponent<Ball>().BallSpeedPower(capsulePower);
                     break;
 
-                case "fast":
-                    Powers.nextPower = Powers.Power.fast;
-                    Powers.newPowerType = Powers.PowerType.speed;
-                    GameObject.Find(Ball.ballPath).GetComponent<Ball>().BallSpeedPower(power, Powers.nextPower);
+                case PowersSystem.Power.fast:
+                    PowersSystem.previousSpeedPower = PowersSystem.currentSpeedPower;
+                    PowersSystem.currentSpeedPower = capsulePower;
+                    PowersSystem.speedPowerTimer.StartPowerTimer(PowersSystem.PowerType.speed, PowersSystem.currentSpeedPower);
+                    GameObject.Find(Ball.ballPath).GetComponent<Ball>().BallSpeedPower(capsulePower);
                     break;
 
                 default:
@@ -53,11 +85,7 @@ public class PowerCapsules : MonoBehaviour
                     return;
             }
 
-            AudioManager.PlayAudio(LevelManager.powersAudioSource, LevelManager.getPowerAudio, false, 0.7f);
-            if (Powers.newPowerType == Powers.PowerType.size)
-                Powers.sizePowerTimer.StartPowerTimer(Powers.PowerType.size, Powers.nextPower);
-            else if (Powers.newPowerType == Powers.PowerType.speed)
-                Powers.speedPowerTimer.StartPowerTimer(Powers.PowerType.speed, Powers.nextPower);
+            AudioManager.PlayAudio(PowersSystem.powersAudioSource, PowersSystem.getPowerAudio, false, 0.7f);
             Destroy(gameObject);
         }
     }

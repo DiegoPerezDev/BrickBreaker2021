@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using MyTools;
+using UnityEngine.Rendering.PostProcessing;
 
 public class GameManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
         This class manages:
-    - The general game save and load (using other saving codes).
     - The scene transitions.
     - The scene set for the transitions.
+    - The general game save and load.
     */
 
     // General data
@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
         Application.runInBackground = false;
 
         // Load data
-        StartCoroutine(LoadGameData());
+        SavingData.LoadData();
 
         // For debugging purposes
         Debug.developerConsoleVisible = true;
@@ -50,7 +50,12 @@ public class GameManager : MonoBehaviour
         if (scene != 0)
             instance.StartCoroutine(LoadScene(scene, true));
         else
+        {
+            GameObject currentCamera = Camera.main.gameObject;
+            currentCamera.GetComponent<PostProcessLayer>().enabled = false;
+
             GoToScene(scene);
+        }
     }
 
 
@@ -203,6 +208,7 @@ public class GameManager : MonoBehaviour
         {
             yield return null;
         }
+        PostprocessingManager.EnablePostProcessing(false);
         MainMenu.ready = false;
 
         // Set AudioManager
@@ -257,47 +263,4 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    #region saving & loading general game data
-
-    public static void SaveGameData(bool newRecord, int currentLevel)
-    {
-        // Another level done if i havent done this specific level yet
-        if (LevelManager.levelsDone[currentLevel - 1] == false)
-        {
-            LevelManager.levelsDone[currentLevel - 1] = true;
-            LevelManager.levelsUnlocked++;
-        }
-
-        // if new record, then save new record and show it in the UI
-        if (newRecord)
-            LevelManager.levelsScore[currentLevel - 1] = LevelManager.lives;
-
-        SavingData.SaveLevelData(currentLevel);
-    }
-
-    public static IEnumerator LoadGameData()
-    {
-        float delay = 0;
-        while (delay < 0.2f)
-        {
-            yield return null;
-            delay += Time.deltaTime;
-        }
-
-        SavingData.LoadData();
-
-        if (LevelManager.levelsUnlocked > 1)
-        {
-            for (int i = 0; i < LevelManager.levelsUnlocked; i++)
-                LevelManager.levelsDone[i] = true;
-        }
-    }
-
-    #endregion
-
-    #region pause by minimizing
-
-    
-
-    #endregion
 }

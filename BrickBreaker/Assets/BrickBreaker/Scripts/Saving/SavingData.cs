@@ -4,19 +4,28 @@ using UnityEngine;
 
 public class SavingData : MonoBehaviour
 {
-    private static readonly string levelsScoresKey = "levelsScoresKey", levelsUnlockedKey = "levelsUnlockedKey";
+    private static readonly string[] levelsScoresKey = { "level1ScoreKey", "level2ScoreKey",
+        "level3ScoreKey", "level4ScoreKey", "level5ScoreKey", "level6ScoreKey", "level7ScoreKey",
+        "level8ScoreKey", "level9ScoreKey", "level10ScoreKey" };
+    private static readonly string levelsUnlockedKey = "levelsUnlockedKey";
 
-    public static void SaveLevelData(int level)
+
+    public static void SaveLevelData()
     {
         PlayerPrefs.SetInt(levelsUnlockedKey, LevelManager.levelsUnlocked);
-        PlayerPrefs.SetInt(levelsScoresKey, LevelManager.levelsScore[level - 1]);
+        for (int i = 0; i < LevelManager.levelsScore.Length; i++)
+            PlayerPrefs.SetInt(levelsScoresKey[i], LevelManager.levelsScore[i]);
     }
 
     public static void LoadData()
     {
         LevelManager.levelsUnlocked = PlayerPrefs.GetInt(levelsUnlockedKey);
-        for(int i = 0; i < LevelManager.levelsScore.Length; i++)
-            LevelManager.levelsScore[i] = PlayerPrefs.GetInt(levelsScoresKey);
+        if (LevelManager.levelsUnlocked < 1)
+            LevelManager.levelsUnlocked = 1;
+        else if (LevelManager.levelsUnlocked > LevelManager.maxLevels)
+            LevelManager.levelsUnlocked = LevelManager.maxLevels;
+        for (int i = 0; i < LevelManager.levelsScore.Length; i++)
+            LevelManager.levelsScore[i] = PlayerPrefs.GetInt(levelsScoresKey[i]);
     }
 
 }

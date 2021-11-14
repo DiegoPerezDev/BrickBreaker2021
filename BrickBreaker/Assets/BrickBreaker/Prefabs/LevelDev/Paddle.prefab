@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 1780429611902963410}
   - component: {fileID: 1780429611902963411}
   - component: {fileID: 1780429611902963408}
+  - component: {fileID: 1780429611902963415}
   - component: {fileID: 1780429611902963413}
   - component: {fileID: 3055790988568373530}
-  - component: {fileID: 1780429611902963415}
+  - component: {fileID: 8235358713358749640}
   m_Layer: 0
   m_Name: Paddle
   m_TagString: Player
@@ -107,6 +108,22 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 6
+--- !u!70 &1780429611902963415
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1780429611902963409}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 4.84, y: 1.27}
+  m_Direction: 1
 --- !u!114 &1780429611902963413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,19 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b44a9124c1d12134ebcb09ba2cafb489, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!70 &1780429611902963415
-CapsuleCollider2D:
+--- !u!114 &8235358713358749640
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1780429611902963409}
   m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 4.84, y: 1.27}
-  m_Direction: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae4cf06c9feb74f4f9444ae335f84b0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
