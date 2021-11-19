@@ -5,13 +5,16 @@ using MyTools;
 
 public class BricksSystem : MonoBehaviour
 {
-    // Audio
     public static AudioSource[] bricksAudioSources = new AudioSource[5];
     public static AudioClip hitAudio, metalHitAudio, destructionAudio;
+    private static GameObject bricksContainer;
 
 
     void Awake()
     {
+        // Get gameobjects
+        bricksContainer = GameObject.Find("LevelDev/Bricks_");
+
         // Get audio components
         for (int i = 0; i < bricksAudioSources.Length; i++)
             bricksAudioSources[i] = GameObject.Find("LevelDev/Bricks_").AddComponent<AudioSource>();
@@ -19,23 +22,20 @@ public class BricksSystem : MonoBehaviour
         metalHitAudio = SearchTools.TryLoadResource("Audio/Level objects/(lo1) metalBrick") as AudioClip;
         destructionAudio = SearchTools.TryLoadResource("Audio/Level objects/(gs1) brick getting crushed") as AudioClip;
     }
-
+    
+    /// <summary>
+    /// Check the remaining bricks in the level to know if the player already won.
+    /// </summary>
     public static void CheckNumberOfBricks()
     {
-        int numberOfActiveBricks = GameObject.Find("LevelDev/Bricks_").transform.childCount - 1;
+        int numberOfActiveBricks = bricksContainer.transform.childCount - 1;
         if (numberOfActiveBricks <= 0)
         {
-            Destroy(SearchTools.TryFind(Ball.ballPath));
+            GameObject ball = GameObject.Find(Ball.ballPath);
+            if(ball != null)
+                Destroy(ball);
             LevelManager.WinGame();
         }
-        //else if (numberOfActiveBricks <= 3)
-        //{
-        //    if (!lastBrickCounter)
-        //    {
-        //        lastBrickCounter = true;
-        //        GameObject.Find("UI/Canvas_HUD/Panel_RightBlock/Timers/FinalTimer").GetComponent<LastBricksCounter>().StartTimer();
-        //    }
-        //}
     }
 
 }

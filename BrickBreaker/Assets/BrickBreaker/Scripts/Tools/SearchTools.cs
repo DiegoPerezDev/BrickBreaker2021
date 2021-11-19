@@ -9,13 +9,12 @@ namespace MyTools
     {
         /*
         * - - - NOTES - - -
-        - This class is just for finding gameObjects and components evading errors if they are not found. 
-        - All of these methods happen in the awake of the monoBehaviour or in the setting functions of the transition of the scenes.
+        - For now, this class is just for finding gameObjects and components evading errors if they are not found. 
         */
 
 
         /// <summary>
-        /// Try to find a gameObject with a direction path of the Unitys hierarchy. If not, then it stops the game and tells us the path in which we tried to find the gameObject.
+        /// Try to find a gameObject with a direction path of the Unitys hierarchy. Interrupt the game if not found.
         /// </summary>
         /// <param name="gameobjectPath"> String path of the gameObject in the Unitys Hierarchy.</param>
         public static GameObject TryFind(string gameobjectPath)
@@ -30,10 +29,9 @@ namespace MyTools
         }
 
         /// <summary>
-        /// Try to find a gameObject inside another gameObject via transform.Find(). If not found, then it stops the game and tells us the path in which we tried to find the gameObject.
+        /// Try to find a gameObject inside another gameObject via transform.Find(). Interrupt the game if not found.
         /// </summary>'
         /// <param name="gameobjectPath"> String path of the child. This path begins after the name of the parent and ends with the name of the child we are trying to find.</param>
-        /// <returns></returns>
         public static GameObject TryFindInGameobject(GameObject parent, string gameobjectPath)
         {
             //Look if the parent gameObject exist.
@@ -59,7 +57,7 @@ namespace MyTools
         }
 
         /// <summary>
-        /// Try to get a component from a gameObject and return it. If not, then it stops the game and tells us the parent in which we tried to find the component.
+        /// Try to get a component from a gameObject and return it. Interrupt the game if not found.
         /// </summary>
         /// <typeparam name="T">Type of component</typeparam>
         /// <param name="gameobject"> The gameObject that contains the component we are looking for.</param>
@@ -90,10 +88,10 @@ namespace MyTools
         }
 
         /// <summary>
-        /// Try to load a resourse of the project on a given path.
+        /// <para> Try to load a resourse of the project on a given path. If not found returns null.</para>
+        /// <para> CAREFUL: this method does not work for all resources types, if it doesn't work the use the common method 'Resources.Load()'</para>
         /// </summary>
-        /// <param name="path">Path of the file to get to that resource.</param>
-        /// <returns></returns>
+        /// <param name="path">Path of the file to get to that resource, right after: "anything/Resources/".</param>
         public static UnityEngine.Object TryLoadResource(string path)
         {
             UnityEngine.Object resource = Resources.Load(path);

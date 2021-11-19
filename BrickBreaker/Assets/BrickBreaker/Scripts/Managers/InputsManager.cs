@@ -23,7 +23,7 @@ public class InputsManager : MonoBehaviour
     public static bool InputsReady;
 
     // Menu inputs
-    public static bool pause, returnToMenu, triggerMenuButton;
+    public static bool pause, returnToMenu, triggerMenuButton, smartPhone_BackButton;
 
 
     // - - - - GAMEPLAY - - - - 
@@ -49,7 +49,6 @@ public class InputsManager : MonoBehaviour
     
     void Start()
     {
-        gameplayInputsDisabled = true;
         SetInputMask();
         InputCallBacks();
     }
@@ -63,15 +62,12 @@ public class InputsManager : MonoBehaviour
         // Inputs for menu management, it's in all scenes
         MenuInputs();
 
-        // Inputs for gameplay scenes
-        if (gameplayInputsDisabled || !(GameManager.currentSceneType == GameManager.SceneType.gameplay) )
-            return;
+        //Inputs for gameplay scenes
+        if (gameplayInputsDisabled || !LevelManager.playing)
+                return;
 
-        if ( (GameManager.currentSceneType == GameManager.SceneType.gameplay) && LevelManager.playing)
-        {
-            MovementInputs();
-            ActionInputs();
-        }
+        MovementInputs();
+        ActionInputs();
     }
 
     void OnEnable()
@@ -97,6 +93,10 @@ public class InputsManager : MonoBehaviour
                 input.bindingMask = InputBinding.MaskByGroup("smartphone");
         #endif
 
+        #if UNITY_IOS
+                input.bindingMask = InputBinding.MaskByGroup("smartphone");
+        #endif
+
         //input.bindingMask = new InputBinding { groups = controlScheme };
     }
 
@@ -105,22 +105,34 @@ public class InputsManager : MonoBehaviour
     /// </summary>
     private static void InputCallBacks()
     {
+
+
+#if UNITY_STANDALONE
         //Read menu inputs
         input.ActionMap.Pause.performed += ctx => pause = ctx.ReadValueAsButton();
         input.ActionMap.Menu_GoBack.performed += ctx => returnToMenu = ctx.ReadValueAsButton();
 
-        //#if UNITY_STANDALONE
             //Read gameplay inputs
             input.ActionMap.LeftMove.performed += ctx => leftMove = ctx.ReadValueAsButton();
             input.ActionMap.RightMove.performed += ctx => rightMove = ctx.ReadValueAsButton();
             input.ActionMap.ReleaseBall.performed += ctx => releaseBall = ctx.ReadValueAsButton();
-        //#endif
+#endif
 
-        #if UNITY_ANDROID
-            //Read gameplay inputs
-            input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
+#if UNITY_ANDROID
+        //Read gameplay inputs
+        input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
             input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
-        #endif
+        //Read menu inputs
+        input.ActionMap.Back.performed += ctx => smartPhone_BackButton = ctx.ReadValueAsButton();
+#endif
+
+#if UNITY_IOS
+                //Read gameplay inputs
+                input.ActionMap.TouchPress.started += ctx => StartScreenTouched();
+                input.ActionMap.TouchPress.canceled += ctx => EndScreenTouched();
+                //Read menu inputs
+                input.ActionMap.Back.performed += ctx => smartPhone_Back = ctx.ReadValueAsButton();
+#endif
     }
 
     /// <summary>
@@ -130,7 +142,7 @@ public class InputsManager : MonoBehaviour
     public static void DisableTriggers()
     {
         // - MAIN MANAGEMENT - 
-        pause = returnToMenu = triggerMenuButton = false;
+        pause = returnToMenu = triggerMenuButton = smartPhone_BackButton = false;
 
         // - GAMEPLAY -
         leftMove = rightMove = false;
@@ -164,11 +176,15 @@ public class InputsManager : MonoBehaviour
         else if (triggerMenuButton)
         {
             triggerMenuButton = false;
-            //#if UNITY_STANDALONE
             Button currentButton = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
             if (currentButton != null)
                 currentButton.onClick.Invoke();
-            //#endif
+        }
+        else if(smartPhone_BackButton)
+        {
+            smartPhone_BackButton = false;
+            if(!LevelManager.paused && !GameManager.loadingScene)
+                LevelManager.PauseMenu(true, false);
         }
     }
 
@@ -196,7 +212,6 @@ public class InputsManager : MonoBehaviour
             paddle = GameObject.Find(Paddle.paddlePath);
             yield return new WaitForSecondsRealtime(0.1f);
         }
-
         paddleCode = paddle.GetComponent<Paddle>();
         InputsReady = true;
     }
@@ -204,8 +219,6 @@ public class InputsManager : MonoBehaviour
     #endregion
 
     #region Smartphone functions
-
-#if UNITY_ANDROID
 
     private static void StartScreenTouched()
     {
@@ -218,7 +231,7 @@ public class InputsManager : MonoBehaviour
 
         if(!rightMove)
         {
-            if ( (touchPos.x > screenWidth * 4f / 5f) && (touchPos.y > (screenHeight * 3 / 4f)) )
+            if ( (touchPos.x > screenWidth * 3f / 5f) && (touchPos.y < (screenHeight * 2 / 3f)) )
             {
                 rightMove = true;
                 return;
@@ -226,7 +239,7 @@ public class InputsManager : MonoBehaviour
         }
         if(!leftMove)
         {
-            if ((touchPos.x < screenWidth / 5f) && (touchPos.y > (screenHeight * 3 / 4f)) )
+            if ((touchPos.x < screenWidth * 2 / 5f) && (touchPos.y < (screenHeight * 2 / 3f)) )
             {
                 leftMove = true;
                 return;
@@ -241,8 +254,6 @@ public class InputsManager : MonoBehaviour
         // Disable movement triggers
         leftMove = rightMove = false;
     }
-
-#endif
 
     #endregion
 
@@ -282,12 +293,10 @@ public class InputsManager : MonoBehaviour
                 Ball.ballReleased = true;
 
                 // desable launch button
-                GameObject launchButton = GameObject.Find("UI/Canvas_HUD/Panel_RightBlock/LaunchBallButton");
-                if (launchButton != null)
-                    Destroy(launchButton);
+                GameplayMenu.launchButton.SetActive(false);
 
                 // release ball
-                GameObject ballGO = SearchTools.TryFind(Ball.ballName);
+                GameObject ballGO = SearchTools.TryFind(Ball.ballPath);
                 Ball ball = SearchTools.TryGetComponent<Ball>(ballGO);
                 ball.ReleaseBall();
             }

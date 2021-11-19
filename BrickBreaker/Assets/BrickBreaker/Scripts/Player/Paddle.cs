@@ -7,12 +7,12 @@ public class Paddle : MonoBehaviour
 {
     // Movement
     [HideInInspector] public bool? moveDirR = null;
-    [HideInInspector] public bool moveBool, canMoveR, canMoveL;
-    private readonly float speed = 18f;
+    [HideInInspector] public bool moveBool, canMoveR = true, canMoveL = true;
+    private readonly float speed = 16f;
     private float lerp;
 
-    // Paddle data
-    public static string paddleName = "Paddle", paddlePath = "LevelDev/Paddle";
+    // Paddle
+    public static string paddlePath = "LevelDev/Paddle";
     private Rigidbody2D rb;
     [HideInInspector] public Vector2 paddleSize;
 
@@ -21,7 +21,7 @@ public class Paddle : MonoBehaviour
     private static float camWidth;
 
     // Powers
-    private IEnumerator usingPower;
+    private IEnumerator powerCor;
     private Vector2 normalSize, shortSize, largeSize, normalScale, shortScale, largeScale;
 
     // Level management
@@ -30,25 +30,20 @@ public class Paddle : MonoBehaviour
 
     void Awake()
     {
-        // Get camera values for the screen boundaries, for limitting the paddle movement
-        GetScreenValues();
-
-        // Paddle data
         rb = GetComponent<Rigidbody2D>();
     }
 
     void Start()    
     {
-        // Paddle data
-        var coll = GetComponent<CapsuleCollider2D>();
-        paddleSize = new Vector2(coll.size.x + coll.size.y/2, coll.size.y) * transform.localScale; // the localscale is not the entire size because it is an sprite.
+        // Paddle size data
+        paddleSize = GetComponent<SpriteRenderer>().bounds.size;
+        float smallMult = 0.66f, largeMult = 1.33f;
         normalSize = paddleSize;
-        shortSize = new Vector2(normalSize.x * 0.6f, normalSize.y);
-        largeSize = new Vector2 (normalSize.x * 1.3f, normalSize.y);
-        normalScale = normalSize / coll.size;
-        shortScale = shortSize / coll.size;
-        largeScale = largeSize / coll.size;
-        canMoveR = canMoveL = true;
+        shortSize = new Vector2(normalSize.x * smallMult, normalSize.y);
+        largeSize = new Vector2 (normalSize.x * largeMult, normalSize.y);
+        normalScale = transform.lossyScale;
+        shortScale = new Vector2(normalScale.x * smallMult, normalScale.y);
+        largeScale = new Vector2(normalScale.x * largeMult, normalScale.y);
 
         // Game management
         StartSet = true;
@@ -57,6 +52,9 @@ public class Paddle : MonoBehaviour
     void OnDestroy()
     {
         StartSet = false;
+        if (powerCor != null)
+            StopCoroutine(powerCor);
+        StopAllCoroutines();
     }
 
     void FixedUpdate()
@@ -70,50 +68,62 @@ public class Paddle : MonoBehaviour
 
     #region Movement
 
-    private void GetScreenValues()
+    /// <summary>
+    /// Wait for the bounds code to set values and then call this method so it can use their values.
+    /// </summary>
+    public static void GetScreenLimits()
     {
         Vector2 camPos = Camera.main.gameObject.transform.position;
         float camHeight = Camera.main.orthographicSize * 2f;
         camWidth = camHeight * Camera.main.aspect;
-        leftScreenLimit = camPos.x - (camWidth / 2);
-        rightScreenLimit = camPos.x + (camWidth / 2);
+        float blackPanelWidth = HUD.blackBlockRtf.rect.width * HUD.blackBlockRtf.transform.lossyScale.x;
+        leftScreenLimit = camPos.x - (camWidth / 2) + blackPanelWidth;
+        rightScreenLimit = camPos.x + (camWidth / 2) - blackPanelWidth;
     }
 
-    public static void GetScreenLimits()
-    {
-        leftScreenLimit += ScreenBounds.blackBlockWidth;
-        rightScreenLimit -= ScreenBounds.blackBlockWidth;
-    }
-
+    /// <summary>
+    /// This movement has lerp. Move the paddle until it gets to the borders.
+    /// </summary>
     private void Move()
     {
         var increase = new Vector2(Mathf.Lerp(0, speed, lerp), 0f) * Time.fixedDeltaTime;
         bool moved = false;
-        Vector2 nextPos;
 
         if (moveDirR == true)
         {
-            nextPos = rb.position + increase;
-            var rightPaddleBorder = nextPos.x + (paddleSize.x / 2);
-            if (rightPaddleBorder < rightScreenLimit)
+            Vector2 nextPos = rb.position + increase;
+            var rightBorderNextPos = nextPos.x + (paddleSize.x / 2);
+            if (rightBorderNextPos <= rightScreenLimit)
             {
+                // Move if you would not surpass the limit of the movement in that next move.
                 rb.MovePosition(nextPos);
                 moved = true;
             }
-            else if (rightPaddleBorder > rightScreenLimit)
-                rb.position = new Vector2(rightScreenLimit - (paddleSize.x / 2), rb.position.y);
+            else
+            {
+                // If next position would make you go out of the border, then take you exactly there, if you are not currently there.
+                Vector2 rightPaddleLimit = new Vector2(rightScreenLimit - (paddleSize.x / 2), rb.position.y);
+                if(rb.position.x < rightPaddleLimit.x)
+                    rb.position = rightPaddleLimit;
+            }
         }
         else if (moveDirR == false)
         {
-            nextPos = rb.position - increase;
-            var leftPaddleBorder = nextPos.x - (paddleSize.x / 2);
-            if (leftPaddleBorder > leftScreenLimit)
+            Vector2 nextPos = rb.position - increase;
+            var leftBorderNextPos = nextPos.x - (paddleSize.x / 2);
+            if (leftBorderNextPos >= leftScreenLimit)
             {
+                // Move if you would not surpass the limit of the movement in that next move.
                 rb.MovePosition(nextPos);
                 moved = true;
             }
-            else if(leftPaddleBorder < leftScreenLimit)
-                rb.position = new Vector2(leftScreenLimit + (paddleSize.x / 2), rb.position.y);
+            else
+            {
+                // If next position would make you go out of the border, then take you exactly there, if you are not currently there.
+                Vector2 leftPaddleLimit = new Vector2(leftScreenLimit + (paddleSize.x / 2), rb.position.y);
+                if (rb.position.x > leftPaddleLimit.x)
+                    rb.position = leftPaddleLimit;
+            }
         }
         else
             return;
@@ -130,20 +140,17 @@ public class Paddle : MonoBehaviour
 
     #region powers
 
+    /// <summary> Paddle acquire a size power. </summary>
     /// <param name="power"> strings for powers are: slow, fast, short and large </param>
     public void GetPower(PowersSystem.Power power)
     {
-        if(usingPower != null)
+        // Remove the previous power if there is one.
+        if(powerCor != null)
         {
-            StopCoroutine(usingPower);
-            StopPower();
+            StopCoroutine(powerCor);
+            powerCor = null;
         }
-        usingPower = Power(power);
-        StartCoroutine(usingPower);
-    }
 
-    private IEnumerator Power(PowersSystem.Power power)
-    {
         // Start power
         switch (power)
         {
@@ -156,15 +163,22 @@ public class Paddle : MonoBehaviour
             case PowersSystem.Power.large:
                 transform.localScale = largeScale;
                 paddleSize = largeSize;
+                CheckIfPaddleOutside();
                 //print("large");
                 break;
 
             default:
                 print("power name not recognized in the paddle code.");
-                usingPower = null;
-                yield break;
+                powerCor = null;
+                return;
         }
 
+        powerCor = PowerDelay(power);
+        StartCoroutine(powerCor);
+    }
+
+    private IEnumerator PowerDelay(PowersSystem.Power power)
+    {
         // Delay
         float delay = 0;
         while(delay < PowersSystem.maxPowerTime)
@@ -180,13 +194,36 @@ public class Paddle : MonoBehaviour
 
         // Stop power
         StopPower();
-        usingPower = null;
     }
 
-    private void StopPower()
+    public void StopPower()
     {
+        if (powerCor != null)
+        {
+            StopCoroutine(powerCor);
+            powerCor = null;
+        }
+        PowersSystem.currentSizePower = PowersSystem.Power.none;
+
         transform.localScale = normalScale;
         paddleSize = normalSize;
+        CheckIfPaddleOutside();
+    }
+
+    /// <summary>
+    /// Check if the paddle is outside of the playing view when changing to a bigger side.
+    /// </summary>
+    private void CheckIfPaddleOutside()
+    {
+        Vector2 leftPaddleLimit = new Vector2(leftScreenLimit + (paddleSize.x / 2), rb.position.y);
+        if (rb.position.x < leftPaddleLimit.x)
+            rb.position = leftPaddleLimit;
+        else
+        {
+            Vector2 rightPaddleLimit = new Vector2(rightScreenLimit - (paddleSize.x / 2), rb.position.y);
+            if (rb.position.x > rightPaddleLimit.x)
+                rb.position = rightPaddleLimit;
+        }
     }
 
     #endregion

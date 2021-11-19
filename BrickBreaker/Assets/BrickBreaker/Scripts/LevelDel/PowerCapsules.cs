@@ -11,6 +11,7 @@ public class PowerCapsules : MonoBehaviour
 
     void Start()
     {
+        // Recognize this capsule power
         switch(power)
         {
             case "slow":
@@ -53,30 +54,24 @@ public class PowerCapsules : MonoBehaviour
             switch (capsulePower)
             {
                 case PowersSystem.Power.small:
-                    PowersSystem.previousSizePower = PowersSystem.currentSizePower;
-                    PowersSystem.currentSizePower = capsulePower;
-                    PowersSystem.sizePowerTimer.StartPowerTimer(PowersSystem.PowerType.size, PowersSystem.currentSizePower);
-                    collision.gameObject.GetComponent<Paddle>().GetPower(capsulePower);
-                    break;
-
                 case PowersSystem.Power.large:
+                    // Set power values
                     PowersSystem.previousSizePower = PowersSystem.currentSizePower;
                     PowersSystem.currentSizePower = capsulePower;
+                    // Start power timmer in the HUD
                     PowersSystem.sizePowerTimer.StartPowerTimer(PowersSystem.PowerType.size, PowersSystem.currentSizePower);
+                    // Call for power activation in the respective code
                     collision.gameObject.GetComponent<Paddle>().GetPower(capsulePower);
                     break;
 
                 case PowersSystem.Power.slow:
-                    PowersSystem.previousSpeedPower = PowersSystem.currentSpeedPower;
-                    PowersSystem.currentSpeedPower = capsulePower;
-                    PowersSystem.speedPowerTimer.StartPowerTimer(PowersSystem.PowerType.speed, PowersSystem.currentSpeedPower);
-                    GameObject.Find(Ball.ballPath).GetComponent<Ball>().BallSpeedPower(capsulePower);
-                    break;
-
                 case PowersSystem.Power.fast:
+                    // Set power values
                     PowersSystem.previousSpeedPower = PowersSystem.currentSpeedPower;
                     PowersSystem.currentSpeedPower = capsulePower;
+                    // Start power timmer in the HUD
                     PowersSystem.speedPowerTimer.StartPowerTimer(PowersSystem.PowerType.speed, PowersSystem.currentSpeedPower);
+                    // Call for power activation in the respective code
                     GameObject.Find(Ball.ballPath).GetComponent<Ball>().BallSpeedPower(capsulePower);
                     break;
 

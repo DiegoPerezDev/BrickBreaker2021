@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MyTools;
-using TMPro;
-using UnityEngine.UI;
 
 public class PowersSystem : MonoBehaviour
 {
@@ -18,25 +16,39 @@ public class PowersSystem : MonoBehaviour
     public enum PowerType { size, speed }
 
     // Objects
-    public static PowerTimer sizePowerTimer, speedPowerTimer;
-
-    // Audio
+    public static HUD_PowerTimer sizePowerTimer, speedPowerTimer;
     public static AudioSource powersAudioSource;
     public static AudioClip getPowerAudio;
+    public static GameObject fastPowerCapsule, slowPowerCapsule, smallPowerCapsule, largePowerCapsule;
 
 
     void Awake()
     {
-        // GameObject components
+        // Get power prefabs
+        string path = "Prefabs/LevelDev/Powers";
+        fastPowerCapsule = Resources.Load<GameObject>($"{path}/PowerFast");
+        slowPowerCapsule = Resources.Load<GameObject>($"{path}/PowerSlow");
+        smallPowerCapsule = Resources.Load<GameObject>($"{path}/PowerSmall");
+        largePowerCapsule = Resources.Load<GameObject>($"{path}/PowerLarge");
+
+        // Timmers components
         string TimersGOpath = "UI/Canvas_HUD/Panel_RightBlock/Timers/";
         GameObject tempGO = GameObject.Find($"{TimersGOpath}SizePowerTimer");
-        sizePowerTimer = tempGO.GetComponent<PowerTimer>();
+        sizePowerTimer = tempGO.GetComponent<HUD_PowerTimer>();
         tempGO = GameObject.Find($"{TimersGOpath}SpeedPowerTimer");
-        speedPowerTimer = tempGO.GetComponent<PowerTimer>();
+        speedPowerTimer = tempGO.GetComponent<HUD_PowerTimer>();
 
         // Audio components
         powersAudioSource = GameObject.Find("LevelDev/Bricks_").AddComponent<AudioSource>();
         getPowerAudio = SearchTools.TryLoadResource("Audio/Level objects/(lo1) get power") as AudioClip;
     }
+
+    private void OnDestroy()
+    {
+        powersSpawned = 0;
+        ResetPowers();
+    }
+
+    public static void ResetPowers() => currentSizePower = currentSpeedPower = previousSizePower = previousSpeedPower = Power.none;
 
 }

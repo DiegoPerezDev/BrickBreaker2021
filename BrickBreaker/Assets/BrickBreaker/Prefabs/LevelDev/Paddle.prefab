@@ -97,16 +97,16 @@ Rigidbody2D:
   m_GameObject: {fileID: 1780429611902963409}
   m_BodyType: 1
   m_Simulated: 1
-  m_UseFullKinematicContacts: 1
+  m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 7b5b4595c06c93147ac81e809b76db88, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
   m_Constraints: 6
 --- !u!70 &1780429611902963415
 CapsuleCollider2D:
@@ -117,12 +117,12 @@ CapsuleCollider2D:
   m_GameObject: {fileID: 1780429611902963409}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 7b5b4595c06c93147ac81e809b76db88, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 4.84, y: 1.27}
+  m_Size: {x: 4.62, y: 1}
   m_Direction: 1
 --- !u!114 &1780429611902963413
 MonoBehaviour:

@@ -8,12 +8,9 @@ public class AudioManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
-    - This class manage all the audio in the game, both music and sfx, for all scenes.
-    - Any code from any scenetype can call the mothods of this class.
+    - This class manage all the audio in the game, for both music and sfx, for all scenes.
+    - All code should use audio by using the methods of this class.
     */
-
-
-    // - - - - GENERAL AUDIO - - - -
 
     // General management
     public static AudioSource GameAudioSource;
@@ -25,38 +22,31 @@ public class AudioManager : MonoBehaviour
 
     // SFX Managerment
     private static AudioMixerGroup sfxMixer;
+    private static AudioMixer musicMixer, SFX_Mixer;
 
 
     void Awake()
     {
+        // Set only one code instance.
         if (instance != null)
-            Destroy(this);
-        else
         {
-            instance = this;
-            FindResources();
+            Destroy(this);
+            return;
         }
-    }
+        else
+            instance = this;
 
-
-    // - - - - MAIN MANAGEMENT - - - -
-
-    #region Start functions 
-
-    private void FindResources()
-    {
-        // Get audio mixers
+        // Find components
+        musicMixer = Resources.Load<AudioMixer>("Audio/MusicMixer");
+        SFX_Mixer = Resources.Load<AudioMixer>("Audio/SFX_Mixer");
         sfxMixer = SearchTools.TryLoadResource("Audio/SFX_Mixer") as AudioMixerGroup;
+        GameAudioSource = instance.gameObject.transform.GetChild(0).GetComponent<AudioSource>();
+        musicSource = instance.gameObject.transform.GetChild(1).GetComponent<AudioSource>();
 
-        // Get audio sources
-        var sfxChild = instance.gameObject.transform.GetChild(0);
-        GameAudioSource = SearchTools.TryGetComponent<AudioSource>(sfxChild.gameObject);
-        var musicChild = instance.gameObject.transform.GetChild(1);
-        musicSource = SearchTools.TryGetComponent<AudioSource>(musicChild.gameObject);
-
-        // Music clips
+        // Find resources
         Array.Resize(ref songsClips, SceneManager.sceneCountInBuildSettings);
         songsClips[0] = SearchTools.TryLoadResource("Audio/Music/(m2) main menu music") as AudioClip;
+        songsClips[1] = null;
         songsClips[2] = SearchTools.TryLoadResource("Audio/Music/(m1) arcade_music_loop") as AudioClip;
         if (songsClips.Length >= 3)
         {
@@ -65,13 +55,19 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    #endregion
+    void Start()
+    {
+        musicMixer.SetFloat("volume", 5f);
+        SFX_Mixer.SetFloat("volume", 0f);
+    }
+
 
     #region SFX methods
 
     /// <summary>
-    /// <para>Try to play a certain sfx in a specific audio source.</para> 
-    /// <para>If there is another clip playing in one of this sources then go to the next audio source to play the next clip, never stop the other when using this method.</para> 
+    /// <para>Try to play a certain sfx in a specific audio source array.</para> 
+    /// <para>If there is another clip playing in one of this sources then go to the next source of the array to play the next clip.</para> 
+    /// <para>If all sources are playing then add a new one to the gameobject so it never interrupt a source that is playing.</para> 
     /// </summary>
     public static void PlayAudio_WithoutInterruption(ref AudioSource[] sources, AudioClip clip, GameObject objectOfSources, bool inLoop, float volume)
     {
@@ -116,10 +112,9 @@ public class AudioManager : MonoBehaviour
 
     /// <summary>
     /// <para>Try to play a certain sfx in a specific audio source.</para> 
-    /// <para>If there is another clip playing in this source then stop it and change it to the new one to play, if you don't want this but have multiple sfx of the same kind then use the overload that uses 'audioSource[]' instead.</para>
+    /// <para>If there is another clip playing in this source then stop it and change it to the new one to play.</para>
+    /// <para>If you don't want to interrupt any sfx then use the overload of this method that uses 'audioSource[]' instead.</para>
     /// </summary>
-    /// <param name="source">Audio source in which the audio is going to come from.</param>
-    /// <param name="clip">Which audio clip.</param>
     public static void PlayAudio(AudioSource source, AudioClip clip, bool inLoop, float volume)
     {
         // Error handler
@@ -130,7 +125,7 @@ public class AudioManager : MonoBehaviour
         }
 
         // Volume
-        if( (volume >= 0) && (volume <= 1) )
+        if( (volume > 0) && (volume <= 1) )
             source.volume = volume;
 
         // Loop
@@ -181,7 +176,8 @@ public class AudioManager : MonoBehaviour
     #region Music methods
 
     /// <summary>
-    /// Play the song of the level just entered in the music audio source.
+    /// <para> Play the song of the level just entered in the music audio source. </para>
+    /// <para> This method should be used by a code like a 'gameManager' or 'transitionManager'. </para>
     /// </summary>
     public static void PlayLevelSong(int actualScene)
     {
@@ -196,7 +192,7 @@ public class AudioManager : MonoBehaviour
         if (actualScene == 0)
             musicSource.volume = 1f;
         else if (actualScene > 1)
-            musicSource.volume = 0.2f;
+            musicSource.volume = 0.3f;
 
         // Select level song
         musicSource.clip = songsClips[actualScene];
@@ -206,23 +202,13 @@ public class AudioManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Stop the audio sources of this gameObject, remember those are NOT all the audio sources but the main ones.
+    /// <para> Stop the audio sources of this gameObject, these are the general sfxs like the menu sfx and also the music. </para>
+    /// <para> Remember those are NOT all the audio sources but the main ones. </para>
     /// </summary>
     public static void StopAllAudio()
     {
-        StopAllGeneralSFX();
         StopLevelSong();
-    }
-
-    /// <summary>
-    /// Stop the general audio source.
-    /// </summary>
-    public static void StopAllGeneralSFX()
-    {
-        if (GameAudioSource == null)
-            return;
-        if (GameAudioSource.isPlaying)
-            GameAudioSource.Stop();
+        StopAllGeneralSFX();
     }
 
     /// <summary>
@@ -234,6 +220,17 @@ public class AudioManager : MonoBehaviour
             return;
         if (musicSource.isPlaying)
             musicSource.Stop();
+    }
+
+    /// <summary>
+    /// Stop the general audio source.
+    /// </summary>
+    private static void StopAllGeneralSFX()
+    {
+        if (GameAudioSource == null)
+            return;
+        if (GameAudioSource.isPlaying)
+            GameAudioSource.Stop();
     }
 
     #endregion

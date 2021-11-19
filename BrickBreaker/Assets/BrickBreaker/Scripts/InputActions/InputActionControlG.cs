@@ -73,6 +73,14 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": ""Press(behavior=2)""
+                },
+                {
+                    ""name"": ""Back"",
+                    ""type"": ""Button"",
+                    ""id"": ""e0112c7c-c3cd-4505-a1a1-851079d208f1"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": ""Press""
                 }
             ],
             ""bindings"": [
@@ -185,6 +193,28 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""action"": ""Menu_GoBack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f629396a-319e-435d-b1ef-3bd638376c8a"",
+                    ""path"": ""*/{Back}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""smartphone"",
+                    ""action"": ""Back"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f997d790-ade7-445a-96c2-4194c238e005"",
+                    ""path"": ""*/{Menu}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""smartphone"",
+                    ""action"": ""Back"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -223,6 +253,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         m_ActionMap_Menu_GoBack = m_ActionMap.FindAction("Menu_GoBack", throwIfNotFound: true);
         m_ActionMap_TouchPosition = m_ActionMap.FindAction("TouchPosition", throwIfNotFound: true);
         m_ActionMap_TouchPress = m_ActionMap.FindAction("TouchPress", throwIfNotFound: true);
+        m_ActionMap_Back = m_ActionMap.FindAction("Back", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -279,6 +310,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
     private readonly InputAction m_ActionMap_Menu_GoBack;
     private readonly InputAction m_ActionMap_TouchPosition;
     private readonly InputAction m_ActionMap_TouchPress;
+    private readonly InputAction m_ActionMap_Back;
     public struct ActionMapActions
     {
         private @InputActionControlG m_Wrapper;
@@ -290,6 +322,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         public InputAction @Menu_GoBack => m_Wrapper.m_ActionMap_Menu_GoBack;
         public InputAction @TouchPosition => m_Wrapper.m_ActionMap_TouchPosition;
         public InputAction @TouchPress => m_Wrapper.m_ActionMap_TouchPress;
+        public InputAction @Back => m_Wrapper.m_ActionMap_Back;
         public InputActionMap Get() { return m_Wrapper.m_ActionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -320,6 +353,9 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 @TouchPress.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPress;
                 @TouchPress.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPress;
                 @TouchPress.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnTouchPress;
+                @Back.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnBack;
+                @Back.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnBack;
+                @Back.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnBack;
             }
             m_Wrapper.m_ActionMapActionsCallbackInterface = instance;
             if (instance != null)
@@ -345,6 +381,9 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 @TouchPress.started += instance.OnTouchPress;
                 @TouchPress.performed += instance.OnTouchPress;
                 @TouchPress.canceled += instance.OnTouchPress;
+                @Back.started += instance.OnBack;
+                @Back.performed += instance.OnBack;
+                @Back.canceled += instance.OnBack;
             }
         }
     }
@@ -376,5 +415,6 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         void OnMenu_GoBack(InputAction.CallbackContext context);
         void OnTouchPosition(InputAction.CallbackContext context);
         void OnTouchPress(InputAction.CallbackContext context);
+        void OnBack(InputAction.CallbackContext context);
     }
 }

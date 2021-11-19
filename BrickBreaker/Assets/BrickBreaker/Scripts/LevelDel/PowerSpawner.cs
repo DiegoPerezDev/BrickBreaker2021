@@ -28,33 +28,32 @@ public class PowerSpawner : MonoBehaviour
             }
         }
 
-        SpawnPower();
+        SpawnRandomPower();
         StartCoroutine(SpawnIteration());
     }
 
-    private void SpawnPower()
+    private void SpawnRandomPower()
     {
-        // Spawn random power
         PowersSystem.powersSpawned++;
         int power = Random.Range(1, 5);
         GameObject powerToSpawn = null;
-        string path = "Prefabs/LevelDev/Powers";
+        
         switch (power)
         {
             case 1:
-                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerFast");
+                powerToSpawn = PowersSystem.fastPowerCapsule;
                 break;
 
             case 2:
-                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerSlow");
+                powerToSpawn = PowersSystem.slowPowerCapsule;
                 break;
 
             case 3:
-                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerSmall");
+                powerToSpawn = PowersSystem.smallPowerCapsule;
                 break;
 
             case 4:
-                powerToSpawn = Resources.Load<GameObject>($"{path}/PowerLarge");
+                powerToSpawn = PowersSystem.largePowerCapsule;
                 break;
 
             default:

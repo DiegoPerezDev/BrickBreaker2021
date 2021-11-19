@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class SavingData : MonoBehaviour
 {
+    // Player pref keys
     private static readonly string[] levelsScoresKey = { "level1ScoreKey", "level2ScoreKey",
         "level3ScoreKey", "level4ScoreKey", "level5ScoreKey", "level6ScoreKey", "level7ScoreKey",
         "level8ScoreKey", "level9ScoreKey", "level10ScoreKey" };
@@ -17,7 +18,7 @@ public class SavingData : MonoBehaviour
             PlayerPrefs.SetInt(levelsScoresKey[i], LevelManager.levelsScore[i]);
     }
 
-    public static void LoadData()
+    public static void LoadLevelData()
     {
         LevelManager.levelsUnlocked = PlayerPrefs.GetInt(levelsUnlockedKey);
         if (LevelManager.levelsUnlocked < 1)

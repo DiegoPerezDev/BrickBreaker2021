@@ -542,6 +542,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a70845b2210f2bc45ad36f16433067fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  printTransitionStates: 0
 --- !u!1001 &201151057
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1092,10 +1093,6 @@ PrefabInstance:
     - target: {fileID: 3106308984964560803, guid: 75633ae420dca76428c17cff0db9ec02, type: 3}
       propertyPath: m_Name
       value: Ball
-      objectReference: {fileID: 0}
-    - target: {fileID: 3106308984964560806, guid: 75633ae420dca76428c17cff0db9ec02, type: 3}
-      propertyPath: m_Mass
-      value: 1.0178761
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 75633ae420dca76428c17cff0db9ec02, type: 3}
@@ -1932,9 +1929,9 @@ Transform:
   - {fileID: 1625671908}
   - {fileID: 1919700064}
   - {fileID: 1101173239}
-  - {fileID: 1508681856}
   - {fileID: 1303913949}
   - {fileID: 53398724}
+  - {fileID: 1508681856}
   - {fileID: 1160288217}
   - {fileID: 1332708411}
   - {fileID: 1173748303}
@@ -2978,6 +2975,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1966560584002878551, guid: e44b632df4e835c47bd6862879f3a156, type: 3}
+      propertyPath: printTransitionStates
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1966560584087346805, guid: e44b632df4e835c47bd6862879f3a156, type: 3}
       propertyPath: m_Name
       value: Managers

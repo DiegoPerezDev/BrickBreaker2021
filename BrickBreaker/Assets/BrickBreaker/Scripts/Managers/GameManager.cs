@@ -2,64 +2,54 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Rendering.PostProcessing;
+using MyTools;
 
 public class GameManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
-        This class manages:
-    - The scene transitions.
-    - The scene set for the transitions.
-    - The general game save and load.
+    *   This class manages: 
+    *       * the scene transitions with their respective settings and load screen management.
+    *       * General game settings like developer options and running settings.
     */
 
-    // General data
     private static GameManager instance;
-
-    // Scene management
-    public enum SceneType { Mainmenu, load, gameplay }
-    public static SceneType currentSceneType;
     public static bool loadingScene, settingScene;
     [SerializeField] private bool printTransitionStates;
 
 
     void Awake()
     {
+        // Set only one instance.
         if (instance != null)
             Destroy(transform.parent.gameObject);
-        else
-        {
-            instance = this;
-            DontDestroyOnLoad(transform.parent.gameObject);
-        }
     }
 
     void Start()
     {
-        // Game settings
+        if (instance != null)
+            return;
+
+        // GENERAL SETTINGS
+        //      For making the game pause when minimizing it.
         Application.runInBackground = false;
-
-        // Load data
-        SavingData.LoadData();
-
-        // For debugging purposes
+        //      For debugging purposes
         Debug.developerConsoleVisible = true;
+        // Set singleton
+        instance = this;
+        DontDestroyOnLoad(transform.parent.gameObject);
 
+        // Load saved data
+        SavingData.LoadLevelData();
+
+        // Load scene, dont go to the loading if we are entering directly to a level via editor.
         var scene = SceneManager.GetActiveScene().buildIndex;
         if (scene != 0)
             instance.StartCoroutine(LoadScene(scene, true));
         else
-        {
-            GameObject currentCamera = Camera.main.gameObject;
-            currentCamera.GetComponent<PostProcessLayer>().enabled = false;
-
             GoToScene(scene);
-        }
     }
 
-
-    #region Transition functions
 
     /// <summary>
     /// <para>So we can use the 'LoadScene()' corroutine like a method.</para>
@@ -81,6 +71,7 @@ public class GameManager : MonoBehaviour
     {
         // Set some things first
         loadingScene = true;
+        settingScene = true;
         UI_Manager.inMenu = true;
         AudioManager.StopAllAudio();
 
@@ -90,177 +81,59 @@ public class GameManager : MonoBehaviour
 
         // Go to the loading scene
         if (instance.printTransitionStates)
-            print("Loading... Entering loading scene");
-        currentSceneType = SceneType.load;
-        AsyncOperation loadingOperation1 = SceneManager.LoadSceneAsync(1);
+            print("Loading... Entering loading scene.");
+        AsyncOperation loadingOperation = SceneManager.LoadSceneAsync(1);
         AudioManager.PlayLevelSong(1);
-        while (!loadingOperation1.isDone)
-        {
+        while (!loadingOperation.isDone)
             yield return null;
-        }
         AudioManager.StopLevelSong();
 
         // Go to the desired scene
         if (instance.printTransitionStates)
-            print("Loading... Entering desired scene");
-        AsyncOperation loadingOperation2 = SceneManager.LoadSceneAsync(scene);
-        while (!loadingOperation2.isDone)
-        {
+            print("Loading... Entering desired scene.");
+        loadingOperation = SceneManager.LoadSceneAsync(scene);
+        while (!loadingOperation.isDone)
             yield return null;
-        }
-
-        AfterSceneChange:
 
         //Get the sceneType and then set the scene
-        GetSceneType(scene);
-        settingScene = true;
+        AfterSceneChange:
         if (instance.printTransitionStates)
-            print("Loading... Setting scene");
-
-        switch (currentSceneType)
-        {
-            case SceneType.Mainmenu:
-                if (instance.printTransitionStates)
-                    print("entering main menu");
-                instance.StartCoroutine(MainmenuSetDelay());
-                break;
-
-            case SceneType.load:
-                print("Going directly to the loading scene should only happen testing the loading scene in development.");
-                yield break;
-
-            case SceneType.gameplay:
-                if (instance.printTransitionStates)
-                    print("entering gameplay");
-                instance.StartCoroutine(GameplaySetDelay());
-                break;
-
-            default:
-                print("Didn't recognice the scene to load. Check the build index you'r trying to access");
-                yield break;
-        }
+            print("Loading... Setting scene.");
         while (settingScene)
-        {
             yield return null;
-        }
-
-        // Close the loading frame after setting all the scene.
-        try
-        {
-            Destroy(GameObject.Find("UI/Canvas_Loading"));
-        }
-        catch
-        {
-            print("could not find the loading screen to destroy in scene number: " + scene);
-            Debug.Break();
-        }
 
         // Start the scene.
-        //      Dont start the gameplay scene after scene set because we still want to wait for the level introduction frame delay.
-        //      Call the StartScene method in the LevelManager for the gameplay scene type.
-        if (currentSceneType == SceneType.Mainmenu)
-            StartScene(scene);
+        GameObject loadScreen = SearchTools.TryFind("UI/Canvas_Loading");
+        Destroy(loadScreen);
+        loadingScene = false;
+        if (instance.printTransitionStates)
+            print("Scene loaded! Starting scene...");
     }
     
-    /// <summary>
-    /// <para>Set our scene type depending on the scene index. </para>
-    /// <para>This function is just so we can use the 'LoadScene()' easier.</para>
-    /// </summary>
-    /// <param name="sceneIndex">Unity's scene index of the scene, its place in the 'File/BuildSettings'.</param>
-    private static void GetSceneType(int sceneIndex)
-    {
-        currentSceneType = sceneIndex switch
-        {
-            0 => SceneType.Mainmenu,
-            1 => SceneType.load,
-            _ => SceneType.gameplay,
-        };
-    }
+    ///// <summary>
+    ///// <para>Set our scene type depending on the scene index. </para>
+    ///// <para>This function is just so we can use the 'LoadScene()' easier.</para>
+    ///// </summary>
+    ///// <param name="sceneIndex">Unity's scene index of the scene, its place in the 'File/BuildSettings'.</param>
+    //private static void GetSceneType(int sceneIndex)
+    //{
+    //    currentSceneType = sceneIndex switch
+    //    {
+    //        0 => SceneType.Mainmenu,
+    //        1 => SceneType.load,
+    //        _ => SceneType.gameplay,
+    //    };
+    //}
 
+    /// <summary>
+    /// Final set of the scene loading. This method should be called from the specific scene manager, like 'LevelManager' for example.
+    /// </summary>
     public static void StartScene(int scene)
     {
         AudioManager.PlayLevelSong(scene);
-        
         InputsManager.DisableTriggers();
-        loadingScene = false;
         if (instance.printTransitionStates)
-            print("Scene loaded!");
+            print("Scene started!");
     }
-
-    #endregion
-
-    #region Scene start settings
-
-    /// <summary>
-    /// Set the main menu scene. Only for using it in the 'LoadScene' corroutine.
-    /// </summary>
-    private static IEnumerator MainmenuSetDelay()
-    {
-        UI_Manager.inMenu = true;
-
-        // Set InputManager
-        InputsManager.gameplayInputsDisabled = true;
-
-        // Set UI
-        if (instance.printTransitionStates)
-            print("Loading... Setting UI");
-        while (!MainMenu.ready)
-        {
-            yield return null;
-        }
-        PostprocessingManager.EnablePostProcessing(false);
-        MainMenu.ready = false;
-
-        // Set AudioManager
-        if (instance.printTransitionStates)
-            print("Loading... Setting audio");
-        // (Nothing for now)
-
-        // Finish
-        settingScene = false;
-    }
-
-    /// <summary>
-    /// Set a gameplay scene. Only for using it in the 'LoadScene' corroutine.
-    /// </summary>
-    /// <param name="scene">Which level to go</param>
-    private static IEnumerator GameplaySetDelay()
-    {
-        // Set InputsManager
-        if (instance.printTransitionStates)
-            print("Loading... Setting Inputs");
-        InputsManager.SetGameplay();
-        while (!InputsManager.InputsReady)
-        {
-            yield return null;
-        }
-        InputsManager.InputsReady = false;
-
-        // Set UI_Manager
-        if (instance.printTransitionStates)
-            print("Loading... Setting UI");
-        while (!GameplayMenu.ready)
-        {
-            yield return null;
-        }
-        GameplayMenu.ready = false;
-
-        // Set LevelManager
-        if (instance.printTransitionStates)
-            print("Loading... Level");
-        LevelManager.SetGameplay();
-        while (!LevelManager.levelReady)
-        {
-            yield return null;
-        }
-        LevelManager.levelReady = false;
-
-        // Finish
-        UI_Manager.inMenu = false;
-        settingScene = false;
-        //LevelManager.Pause(false);
-    }
-
-    #endregion
 
 }

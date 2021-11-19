@@ -13,4 +13,10 @@ public class PlayerLife : MonoBehaviour
         loseLifeAudio = Resources.Load<AudioClip>("Audio/Level general/(gs1) losing life");
     }
 
+    void Start()
+    {
+        lives = liveCap;
+        HUD_Life.RewriteLife();
+    }
+
 }

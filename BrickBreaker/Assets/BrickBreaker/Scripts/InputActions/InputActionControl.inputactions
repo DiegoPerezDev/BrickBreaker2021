@@ -60,6 +60,14 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "Press(behavior=2)"
+                },
+                {
+                    "name": "Back",
+                    "type": "Button",
+                    "id": "e0112c7c-c3cd-4505-a1a1-851079d208f1",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press"
                 }
             ],
             "bindings": [
@@ -170,6 +178,28 @@
                     "processors": "",
                     "groups": "pc",
                     "action": "Menu_GoBack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f629396a-319e-435d-b1ef-3bd638376c8a",
+                    "path": "*/{Back}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "smartphone",
+                    "action": "Back",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f997d790-ade7-445a-96c2-4194c238e005",
+                    "path": "*/{Menu}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "smartphone",
+                    "action": "Back",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

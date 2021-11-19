@@ -10,9 +10,8 @@ public class LevelManager : MonoBehaviour
 {
     /*
     * - - - NOTES - - -
-    - This class manage the gameplay scenes (levels).
-    - Its only for the general management, things like:
-        * Pausing
+    - This class manage the gameplay scenes (levels) general behaviour:
+        * Pausing.
         * Level data: levels unlocked, levels score, etc.
         * Level entering and leaving behaviour
         * Win and lose behaviour
@@ -20,51 +19,50 @@ public class LevelManager : MonoBehaviour
 
     // - - - GENERAL LEVEL MANAGEMENT - - -
 
+    // General
+    [SerializeField] private bool printTransitionStates;
+
     // Pause
     public static bool pauseTrigger, playing, paused;
 
     // Win and lose
     private static AudioClip loseAudio, winAudio;
+    private static CameraMovement camCode;
+    private static GameObject newRecordText;
+    private static Image scoreImg;
+    private static readonly Sprite[] scoreImgs = new Sprite[4];
 
-    // For setting this class
+    // Start setting
     private static LevelManager instance;
     private static IEnumerator setCorroutine;
-    public static bool levelReady;
-    private static GameObject screenBoundsPref;
 
     // Level data
     public static int levelsUnlocked;
     public static readonly int maxLevels = 10;
     public static int[] levelsScore = new int[maxLevels];
-    private static GameObject newRecordText;
-    private static Image scoreImg;
-    private static readonly Sprite[] scoreImgs = new Sprite[4];
 
 
     void Awake()
     {
+        // Components for start settings
         instance = this;
-
-        // Get level entering text
-        GameObject temp1 = SearchTools.TryFind("UI/Canvas_Menu/Panel_LevelEntering/TitleTMP");
+        GameObject LevelEnteringTitleGO = SearchTools.TryFind("UI/Canvas_Menu/Panel_LevelEntering/TitleTMP");
+        GameObject InGame_LevelIndicatorGO = SearchTools.TryFind("UI/Canvas_HUD/Panel_RightBlock/Level");
         int actualScene = SceneManager.GetActiveScene().buildIndex - 1;
-        if (temp1)
+        if (LevelEnteringTitleGO)
         {
-            TextMeshProUGUI temp2 = SearchTools.TryGetComponent<TextMeshProUGUI>(temp1);
-            if(actualScene < 10)
-                temp2.text = $"Level 0{actualScene}";
+            TextMeshProUGUI startLevelIndicator = SearchTools.TryGetComponent<TextMeshProUGUI>(LevelEnteringTitleGO);
+            TextMeshProUGUI InGame_LevelIndicator = SearchTools.TryGetComponent<TextMeshProUGUI>(InGame_LevelIndicatorGO);
+            if (actualScene < maxLevels)
+                startLevelIndicator.text = InGame_LevelIndicator.text = $"Level 0{actualScene}";
             else
-                temp2.text = $"Level {actualScene}";
+                startLevelIndicator.text = InGame_LevelIndicator.text = $"Level {actualScene}";
         }
 
-        // Get audio components
+        // Components for win and lose management
         loseAudio = SearchTools.TryLoadResource("Audio/Level general/(lg1) lose") as AudioClip;
         winAudio = SearchTools.TryLoadResource("Audio/Level general/(lg3) win") as AudioClip;
-
-        // Get prefabs for instancing
-        screenBoundsPref = SearchTools.TryLoadResource("Prefabs/LevelDev/ScreenBounds") as GameObject;
-
-        // Get score components
+        camCode = Camera.main.GetComponent<CameraMovement>();
         newRecordText = SearchTools.TryFind("UI/Canvas_Menu/Panel_Win/NewRecord");
         var temp = SearchTools.TryFind("UI/Canvas_Menu/Panel_Win/Score");
         scoreImg = SearchTools.TryGetComponent<Image>(temp);
@@ -75,8 +73,10 @@ public class LevelManager : MonoBehaviour
     void Start()
     {
         SetLevelObjects();
-        Pause(false);
-        playing = true;
+
+        // Set all the things that needs time for being set
+        setCorroutine = SetGameplayCorr();
+        instance.StartCoroutine(setCorroutine);
     }
 
     void Update()
@@ -86,18 +86,18 @@ public class LevelManager : MonoBehaviour
         {
             pauseTrigger = false;
 
-            // If i am at the first pause menu layer, unpause the game, else pause it.
+            // If i am at the first pause menu layer, unpause the game, else pause it if not in the pause menu.
             if (UI_Manager.inMenu)
             {
                 if (GameplayMenu.openedMenus[UI_Manager.currentMenuLayer] == GameplayMenu.Panels.pause)
                 {
                     AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.unPause], false, 1f);
-                    PauseMenu(false);
+                    PauseMenu(false, true);
                 }
             }
             else
             {
-                PauseMenu(true);
+                PauseMenu(true, true);
                 InputsManager.DisableTriggers();
             }
         }
@@ -105,47 +105,51 @@ public class LevelManager : MonoBehaviour
 
     void OnDestroy()
     {
-        //reset some values
+        // reset some values
         playing = false;
 
         // stop coroutines
         StopAllCoroutines();
         if(instance != null)
             instance.StopAllCoroutines();
+        if (setCorroutine != null)
+            StopCoroutine(setCorroutine);
+    }
+
+    /// <summary>
+    /// Behaviour of the game when minimizing. In this case we open the pause menu.
+    /// </summary>
+    void OnApplicationPause(bool pauseStatus)
+    {
+        if (!pauseStatus || GameManager.loadingScene)
+            return;
+        if (!paused)
+            PauseMenu(true, false);
     }
 
 
     #region start settings functions
 
     /// <summary>
-    /// <para> For setting everything for the gameplay level when starting those levels.</para> 
-    /// <para> This method should be called when making a transition to a gameplay scene from the GameManager class.</para> 
-    /// </summary>
-    public static void SetGameplay()
-    {
-        // Set lifes
-        PlayerLife.lives = PlayerLife.liveCap;
-        HUD_Life.RewriteLife();
-
-        // Wait while the other codes of the gameplay finish setting things
-        if (instance != null)
-        {
-            if (setCorroutine != null)
-            {
-                instance.StopCoroutine(setCorroutine);
-                setCorroutine = null;
-            }
-            setCorroutine = SetGameplayCorr();
-            instance.StartCoroutine(setCorroutine);
-        }
-        
-    }
-
-    /// <summary>
     /// Corroutine for waiting till all the codes that has things to set in the level finish setting those things.
     /// </summary>
     private static IEnumerator SetGameplayCorr()
     {
+        // Set InputsManager
+        if (instance.printTransitionStates)
+            print("Loading... Setting Inputs");
+        InputsManager.SetGameplay();
+        while (!InputsManager.InputsReady)
+            yield return null;
+        InputsManager.InputsReady = false;
+
+        // Set UI_Manager
+        if (instance.printTransitionStates)
+            print("Loading... Setting UI");
+        while (!GameplayMenu.ready)
+            yield return null;
+        GameplayMenu.ready = false;
+
         // Set saving data
         int currentLevel = SceneManager.GetActiveScene().buildIndex - 1; // - 1 because the levels starts on scene #2
         if (currentLevel > levelsUnlocked)
@@ -156,41 +160,39 @@ public class LevelManager : MonoBehaviour
         }
         SavingData.SaveLevelData();
 
-        // Set Screen bounds
+        // Set level objects:
+        if (instance.printTransitionStates)
+            print("Loading... Setting screen bounds");
         while (!ScreenBounds.StartSet)
-        {
             yield return null;
-        }
-
-        // Set paddle
+        if (instance.printTransitionStates)
+            print("Loading... Setting paddle");
         while (!Paddle.StartSet)
-        {
             yield return null;
-        }
-
-        // Set ball
+        if (instance.printTransitionStates)
+            print("Loading... Setting ball");
         while (!Ball.StartSet)
-        {
             yield return null;
-        }
 
-        // Tell the GameManager this code is ready
-        levelReady = true;
+        // Tell the GameManager this code is ready so it disables the loading screen.
+        GameManager.settingScene = false;
 
-        // Level entering panel for a short time
-        if(SceneManager.GetActiveScene().buildIndex <= maxLevels + 1)
-        {
-            yield return new WaitForSecondsRealtime(2f);
-        }
+        // Enable level entering panel for a short time
+        if ( (SceneManager.GetActiveScene().buildIndex - 1) <= maxLevels)
+            yield return new WaitForSecondsRealtime(1.6f);
         GameObject temp = SearchTools.TryFind("UI/Canvas_Menu/Panel_LevelEntering");
-        if (temp)
-            temp.SetActive(false);
+        temp.SetActive(false);
 
-        // Start the game
+        // Starts the level
         GameManager.StartScene(SceneManager.GetActiveScene().buildIndex);
-        setCorroutine = null;
+        UI_Manager.inMenu = false;
+        Pause(false);
+        playing = true;
     }
 
+    /// <summary>
+    /// Instantiate some objects, set some others and manage some components needed.
+    /// </summary>
     private static void SetLevelObjects()
     {
         // Add some codes to this gameObject
@@ -198,10 +200,6 @@ public class LevelManager : MonoBehaviour
             instance.gameObject.AddComponent<PowersSystem>();
         if (instance.gameObject.GetComponent<BricksSystem>() == null)
             instance.gameObject.AddComponent<BricksSystem>();
-
-        // Instantiate some objects
-        GameObject screenBounds = Instantiate(screenBoundsPref, screenBoundsPref.transform.position, Quaternion.identity);
-        screenBounds.transform.parent = instance.gameObject.transform;
 
         // Enable postProcessing
         PostprocessingManager.EnablePostProcessing(true);
@@ -212,9 +210,10 @@ public class LevelManager : MonoBehaviour
     #region Pause management
 
     /// <summary>
-    /// Open or close the pause menu on a gameplay scene. Also manage the real pausing in each case. For just pausing without UI changing use the 'Pause()' method.
+    /// <para> Open or close the pause menu on a gameplay scene.</para>
+    /// <para> For pausing without UI changing use the 'Pause()' method. </para>
     /// </summary>
-    public static void PauseMenu(bool pausing)
+    public static void PauseMenu(bool pausing, bool withSound)
     {
         pauseTrigger = false;
 
@@ -222,14 +221,15 @@ public class LevelManager : MonoBehaviour
         {
             paused = true;
             playing = false;
-            AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.pause], false, 1f);
-            UI_Manager.OpenMenuLayer<GameplayMenu.Panels>(GameplayMenu.Panels.pause);
+            if(withSound)
+                AudioManager.PlayAudio(AudioManager.GameAudioSource, UI_Manager.uiClips[(int)UI_Manager.UiAudioNames.pause], false, 1f);
+            GameplayMenu.OpenMenuLayer(GameplayMenu.Panels.pause);
         }
         else
         {
             paused = false;
             playing = true;
-            UI_Manager.ClosePanel();
+            GameplayMenu.ClosePanel();
             InputsManager.DisableTriggers();
         }
         InputsManager.gameplayInputsDisabled = pausing;
@@ -237,23 +237,15 @@ public class LevelManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Pause or unpause the game without changing the menus.
+    /// <para> Pause or unpause the game without changing the menus. </para>
+    /// <para> For pausing without UI changing use the 'Pause()' method. </para>
     /// </summary>
-    /// <param name="enable"></param>
     private static void Pause(bool enable)
     {
         if (enable)
             Time.timeScale = 0;
         else
             Time.timeScale = 1;
-    }
-
-    void OnApplicationPause(bool pauseStatus)
-    {
-        if (!pauseStatus || GameManager.loadingScene)
-            return;
-        if (!paused)
-            PauseMenu(true);
     }
 
     #endregion
@@ -272,7 +264,7 @@ public class LevelManager : MonoBehaviour
         // Audio and UI settings
         AudioManager.StopLevelSong();
         AudioManager.PlayAudio(AudioManager.GameAudioSource, loseAudio, false, 1f);
-        UI_Manager.OpenMenuLayer(GameplayMenu.Panels.lose);
+        GameplayMenu.OpenMenuLayer(GameplayMenu.Panels.lose);
     }
 
     /// <summary>
@@ -280,49 +272,79 @@ public class LevelManager : MonoBehaviour
     /// </summary>
     public static void WinGame()
     {
-        playing = false;
-
-        // New record
+        // Check new record
         int currentLevel = SceneManager.GetActiveScene().buildIndex - 1; // - 1 because the levels starts on scene #2
         bool newRecord = false;
         if (levelsScore[currentLevel - 1] < PlayerLife.lives)
             newRecord = true;
 
-        // Audio and UI settings
-        AudioManager.StopLevelSong();
-        AudioManager.PlayAudio(AudioManager.GameAudioSource, winAudio, false, 1f);
-        scoreImg.sprite = scoreImgs[PlayerLife.lives];
-        UI_Manager.OpenMenuLayer<GameplayMenu.Panels>(GameplayMenu.Panels.win);
-        if (!newRecord)
-            newRecordText.SetActive(false);
-
         // General management
+        playing = false;
         Pause(true);
         if (newRecord)
             levelsScore[currentLevel - 1] = PlayerLife.lives;
         SavingData.SaveLevelData();
+
+        // Audio and UI settings
+        AudioManager.StopLevelSong();
+        AudioManager.PlayAudio(AudioManager.GameAudioSource, winAudio, false, 1f);
+        scoreImg.sprite = scoreImgs[PlayerLife.lives];
+        GameplayMenu.OpenMenuLayer(GameplayMenu.Panels.win);
+        if (!newRecord)
+            newRecordText.SetActive(false);
     }
 
+    /// <summary>
+    /// What happens when losing a live. Call it in another code that triggers it.
+    /// </summary>
     public static void LoseLive()
     {
-        var ball = SearchTools.TryFindInGameobject(instance.gameObject, Ball.ballName);
-        Ball ballCode = ball.GetComponent<Ball>();
-
+        // Lose a live
         PlayerLife.lives--;
         HUD_Life.RewriteLife();
+
+        var ball = SearchTools.TryFind(Ball.ballPath);
+        Ball ballCode = ball.GetComponent<Ball>();
+
+        // Check if all lives are lost for triggering the game lost.
         if (PlayerLife.lives < 1)
         {
-            LoseGame();
             Destroy(ballCode.gameObject);
+            LoseGame();
             return;
         }
+        // Regular behaviour when losing a live
         else
         {
             AudioManager.PlayAudio(AudioManager.GameAudioSource, PlayerLife.loseLifeAudio, false, 0.4f);
-            var camCode = Camera.main.GetComponent<CameraShake>();
-            camCode.StartCoroutine(camCode.Shake(0.25f, 0.07f));
+            camCode.StartCoroutine(camCode.Shake(0.2f, 0.07f));
+            ResetLevel(ballCode);
         }
+    }
+
+    private static void ResetLevel(Ball ballCode)
+    {
+        //Reset HUD
+        GameplayMenu.launchButton.SetActive(true);
+        GameObject powersUI_GO = GameObject.Find(HUD_PowerTimer.powerTimersContainerPath);
+        if (powersUI_GO != null)
+        {
+            foreach (HUD_PowerTimer timer in powersUI_GO.GetComponentsInChildren<HUD_PowerTimer>())
+            {
+                timer.ResetCounter();
+                timer.gameObject.SetActive(false);
+            }
+        }
+
+        // Reset paddle and ball
         ballCode.RestartBall();
+        ballCode.StopPower();
+        GameObject paddle = GameObject.Find(Paddle.paddlePath);
+        if (paddle != null)
+            paddle.GetComponent<Paddle>().StopPower();
+
+        // Reset powers
+        PowersSystem.ResetPowers();
     }
 
     #endregion
