@@ -9,6 +9,7 @@ public class SavingData : MonoBehaviour
         "level3ScoreKey", "level4ScoreKey", "level5ScoreKey", "level6ScoreKey", "level7ScoreKey",
         "level8ScoreKey", "level9ScoreKey", "level10ScoreKey" };
     private static readonly string levelsUnlockedKey = "levelsUnlockedKey";
+    private static readonly string musicSliderValKey = "musicSliderValKey", sfxSliderValKey = "sfxSliderValKey";
 
 
     public static void SaveLevelData()
@@ -16,6 +17,14 @@ public class SavingData : MonoBehaviour
         PlayerPrefs.SetInt(levelsUnlockedKey, LevelManager.levelsUnlocked);
         for (int i = 0; i < LevelManager.levelsScore.Length; i++)
             PlayerPrefs.SetInt(levelsScoresKey[i], LevelManager.levelsScore[i]);
+        PlayerPrefs.SetFloat(musicSliderValKey, Gameplay_UI.musicSliderVal);
+        PlayerPrefs.SetFloat(sfxSliderValKey, Gameplay_UI.sfxSliderVal);
+    }
+
+    public static void SaveSettingsData()
+    {
+        PlayerPrefs.SetFloat(musicSliderValKey, Gameplay_UI.musicSliderVal);
+        PlayerPrefs.SetFloat(sfxSliderValKey, Gameplay_UI.sfxSliderVal);
     }
 
     public static void LoadLevelData()
@@ -27,6 +36,19 @@ public class SavingData : MonoBehaviour
             LevelManager.levelsUnlocked = LevelManager.maxLevels;
         for (int i = 0; i < LevelManager.levelsScore.Length; i++)
             LevelManager.levelsScore[i] = PlayerPrefs.GetInt(levelsScoresKey[i]);
+    }
+
+    public static void LoadSettingData()
+    {
+        Gameplay_UI.musicSliderVal = PlayerPrefs.GetFloat(musicSliderValKey);
+        Gameplay_UI.sfxSliderVal = PlayerPrefs.GetFloat(sfxSliderValKey);
+    }
+
+    public static void ResetSavingData()
+    {
+        PlayerPrefs.SetInt(levelsUnlockedKey, 1);
+        for (int i = 0; i < LevelManager.levelsScore.Length; i++)
+            PlayerPrefs.SetInt(levelsScoresKey[i], 0);
     }
 
 }

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MyTools;
 
 public class PowersSystem : MonoBehaviour
 {
@@ -31,16 +30,20 @@ public class PowersSystem : MonoBehaviour
         smallPowerCapsule = Resources.Load<GameObject>($"{path}/PowerSmall");
         largePowerCapsule = Resources.Load<GameObject>($"{path}/PowerLarge");
 
+        // Audio components
+        powersAudioSource = GameObject.Find("LevelDev/Bricks_").AddComponent<AudioSource>();
+        powersAudioSource.outputAudioMixerGroup = AudioManager.sfxMixerGroup;
+        getPowerAudio = Resources.Load<AudioClip>("Audio/Level objects/(lo1) get power");
+    }
+
+    void Start()
+    {
         // Timmers components
-        string TimersGOpath = "UI/Canvas_HUD/Panel_RightBlock/Timers/";
+        string TimersGOpath = "UI/Canvas_HUD/Panel_RightBlock/";
         GameObject tempGO = GameObject.Find($"{TimersGOpath}SizePowerTimer");
         sizePowerTimer = tempGO.GetComponent<HUD_PowerTimer>();
         tempGO = GameObject.Find($"{TimersGOpath}SpeedPowerTimer");
         speedPowerTimer = tempGO.GetComponent<HUD_PowerTimer>();
-
-        // Audio components
-        powersAudioSource = GameObject.Find("LevelDev/Bricks_").AddComponent<AudioSource>();
-        getPowerAudio = SearchTools.TryLoadResource("Audio/Level objects/(lo1) get power") as AudioClip;
     }
 
     private void OnDestroy()

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MyTools;
 
 public class Paddle : MonoBehaviour
 {
@@ -36,6 +35,9 @@ public class Paddle : MonoBehaviour
     void Start()    
     {
         // Paddle size data
+#if UNITY_ANDROID
+        transform.localScale = new Vector3(transform.localScale.x * 1.2f, transform.localScale.y, transform.localScale.z);
+#endif
         paddleSize = GetComponent<SpriteRenderer>().bounds.size;
         float smallMult = 0.66f, largeMult = 1.33f;
         normalSize = paddleSize;
@@ -131,14 +133,20 @@ public class Paddle : MonoBehaviour
         // Increase lerp of the movement only when we move
         if (moved)
         {
-            if (lerp < 1)
+#if UNITY_STANDALONE
+if (lerp < 1)
                 lerp += Time.fixedDeltaTime * 5;
+#endif
+#if UNITY_ANDROID
+if (lerp < 1)
+                lerp += Time.fixedDeltaTime * 8.5f;
+#endif
         }
     }
 
-    #endregion
+#endregion
 
-    #region powers
+#region powers
 
     /// <summary> Paddle acquire a size power. </summary>
     /// <param name="power"> strings for powers are: slow, fast, short and large </param>
@@ -226,6 +234,6 @@ public class Paddle : MonoBehaviour
         }
     }
 
-    #endregion
+#endregion
 
 }

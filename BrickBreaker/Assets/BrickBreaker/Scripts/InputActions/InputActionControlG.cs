@@ -81,6 +81,14 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": ""Press""
+                },
+                {
+                    ""name"": ""MenuNavigationButtons"",
+                    ""type"": ""Button"",
+                    ""id"": ""d683668f-517e-4fb8-bbdb-39ed081b7377"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": ""Press""
                 }
             ],
             ""bindings"": [
@@ -132,6 +140,17 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""name"": """",
                     ""id"": ""2ce34291-d29b-4825-9c12-dcd176b5bb62"",
                     ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""ReleaseBall"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f6aa07e7-a6c6-4ea3-a27e-075c2b471645"",
+                    ""path"": ""<Keyboard>/enter"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""pc"",
@@ -215,6 +234,94 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                     ""action"": ""Back"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""03f5f346-8dce-42a4-b8cd-ae2983fcf1f8"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""90ee42c0-c17e-4963-9c28-96b2833d0081"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""46e8cc48-0681-4809-a3c8-870b9a751307"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""70fc20cd-1cdc-4931-83c5-e457b60e67a2"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6c023e74-ade7-4d96-a015-bed4e22a69af"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ee7480eb-db5d-462d-99e9-959e38438b8f"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a14ebd4e-ed51-466f-9ff0-81088ba62710"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""103f3392-2ebe-4ea7-b22a-f31c3f96fa60"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""pc"",
+                    ""action"": ""MenuNavigationButtons"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -254,6 +361,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         m_ActionMap_TouchPosition = m_ActionMap.FindAction("TouchPosition", throwIfNotFound: true);
         m_ActionMap_TouchPress = m_ActionMap.FindAction("TouchPress", throwIfNotFound: true);
         m_ActionMap_Back = m_ActionMap.FindAction("Back", throwIfNotFound: true);
+        m_ActionMap_MenuNavigationButtons = m_ActionMap.FindAction("MenuNavigationButtons", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -311,6 +419,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
     private readonly InputAction m_ActionMap_TouchPosition;
     private readonly InputAction m_ActionMap_TouchPress;
     private readonly InputAction m_ActionMap_Back;
+    private readonly InputAction m_ActionMap_MenuNavigationButtons;
     public struct ActionMapActions
     {
         private @InputActionControlG m_Wrapper;
@@ -323,6 +432,7 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         public InputAction @TouchPosition => m_Wrapper.m_ActionMap_TouchPosition;
         public InputAction @TouchPress => m_Wrapper.m_ActionMap_TouchPress;
         public InputAction @Back => m_Wrapper.m_ActionMap_Back;
+        public InputAction @MenuNavigationButtons => m_Wrapper.m_ActionMap_MenuNavigationButtons;
         public InputActionMap Get() { return m_Wrapper.m_ActionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -356,6 +466,9 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 @Back.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnBack;
                 @Back.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnBack;
                 @Back.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnBack;
+                @MenuNavigationButtons.started -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnMenuNavigationButtons;
+                @MenuNavigationButtons.performed -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnMenuNavigationButtons;
+                @MenuNavigationButtons.canceled -= m_Wrapper.m_ActionMapActionsCallbackInterface.OnMenuNavigationButtons;
             }
             m_Wrapper.m_ActionMapActionsCallbackInterface = instance;
             if (instance != null)
@@ -384,6 +497,9 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
                 @Back.started += instance.OnBack;
                 @Back.performed += instance.OnBack;
                 @Back.canceled += instance.OnBack;
+                @MenuNavigationButtons.started += instance.OnMenuNavigationButtons;
+                @MenuNavigationButtons.performed += instance.OnMenuNavigationButtons;
+                @MenuNavigationButtons.canceled += instance.OnMenuNavigationButtons;
             }
         }
     }
@@ -416,5 +532,6 @@ public class @InputActionControlG : IInputActionCollection, IDisposable
         void OnTouchPosition(InputAction.CallbackContext context);
         void OnTouchPress(InputAction.CallbackContext context);
         void OnBack(InputAction.CallbackContext context);
+        void OnMenuNavigationButtons(InputAction.CallbackContext context);
     }
 }

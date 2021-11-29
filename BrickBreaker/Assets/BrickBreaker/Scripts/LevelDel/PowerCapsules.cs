@@ -51,6 +51,9 @@ public class PowerCapsules : MonoBehaviour
         }
         else if (collision.CompareTag("Player"))
         {
+            if (!Ball.ballReleased)
+                goto destroy;
+
             switch (capsulePower)
             {
                 case PowersSystem.Power.small:
@@ -80,6 +83,7 @@ public class PowerCapsules : MonoBehaviour
                     return;
             }
 
+            destroy:
             AudioManager.PlayAudio(PowersSystem.powersAudioSource, PowersSystem.getPowerAudio, false, 0.7f);
             Destroy(gameObject);
         }

@@ -406,15 +406,14 @@ public class Ball : MonoBehaviour
                 if (hitObject)
                 {
                     hitObject = false;
-                    if(GameplayMenu.unstuckButton.activeInHierarchy)
-                        GameplayMenu.unstuckButton.SetActive(false);
+                    Gameplay_UI.unstuckButton.interactable = false;
                     goto RepeatCor;
                 }
             }
 
             // If we are stuck for a few time
             stuck = true;
-            GameplayMenu.unstuckButton.SetActive(true);
+            Gameplay_UI.unstuckButton.interactable = true;
         }
         else
         {
@@ -422,7 +421,7 @@ public class Ball : MonoBehaviour
             if (hitObject)
             {
                 hitObject = stuck = false;
-                GameplayMenu.unstuckButton.SetActive(false);
+                Gameplay_UI.unstuckButton.interactable = false;
             }
         }
 
@@ -445,21 +444,20 @@ public class Ball : MonoBehaviour
 
     private void UnstuckBall()
     {
-        // Redirect the ball vertically if it had a non stop horizontal movement for five seconds
-        float speedX = -speed / Mathf.Sqrt(2);
-        if (rb.velocity.x > 0)
-            speedX = -speedX;
-
-        if(DetectObstacles()[2])
-            rb.velocity = new Vector2(speedX, -speed);
-        else
-            rb.velocity = new Vector2(speedX, speed);
-
         AudioManager.PlayAudio(audioSource, ballReleaseAudio, false, 0.8f);
 
+        // Redirect the ball
+        float speedLeg = speed / Mathf.Sqrt(2);
+        float horSpeed = speedLeg, verSpeed = speedLeg;
+        if (DetectObstacles()[1])
+            horSpeed = -horSpeed;
+        if (DetectObstacles()[2])
+            verSpeed = -verSpeed;
+        rb.velocity = new Vector2(horSpeed, verSpeed);
+
         // Close the unstuck button
-        if(GameplayMenu.unstuckButton != null)
-            GameplayMenu.unstuckButton.SetActive(false);
+        if(Gameplay_UI.unstuckButton != null)
+            Gameplay_UI.unstuckButton.interactable = false;
     }
 
     #endregion
@@ -529,8 +527,11 @@ public class Ball : MonoBehaviour
         usingSpeedPower = false;
         PowersSystem.currentSpeedPower = PowersSystem.Power.none;
 
-        if(ballSpeedCor != null)
+        if (ballSpeedCor != null)
+        {
+            StopCoroutine(ballSpeedCor);
             ballSpeedCor = null;
+        }
 
         ballSpeedCor = SpeedIncrese();
         StartCoroutine(ballSpeedCor);

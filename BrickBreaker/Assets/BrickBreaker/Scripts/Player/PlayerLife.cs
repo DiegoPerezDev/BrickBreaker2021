@@ -16,7 +16,6 @@ public class PlayerLife : MonoBehaviour
     void Start()
     {
         lives = liveCap;
-        HUD_Life.RewriteLife();
     }
 
 }

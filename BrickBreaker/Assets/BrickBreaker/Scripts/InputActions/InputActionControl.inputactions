@@ -68,6 +68,14 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "Press"
+                },
+                {
+                    "name": "MenuNavigationButtons",
+                    "type": "Button",
+                    "id": "d683668f-517e-4fb8-bbdb-39ed081b7377",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press"
                 }
             ],
             "bindings": [
@@ -119,6 +127,17 @@
                     "name": "",
                     "id": "2ce34291-d29b-4825-9c12-dcd176b5bb62",
                     "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "ReleaseBall",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f6aa07e7-a6c6-4ea3-a27e-075c2b471645",
+                    "path": "<Keyboard>/enter",
                     "interactions": "",
                     "processors": "",
                     "groups": "pc",
@@ -200,6 +219,94 @@
                     "processors": "",
                     "groups": "smartphone",
                     "action": "Back",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "03f5f346-8dce-42a4-b8cd-ae2983fcf1f8",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "90ee42c0-c17e-4963-9c28-96b2833d0081",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "46e8cc48-0681-4809-a3c8-870b9a751307",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "70fc20cd-1cdc-4931-83c5-e457b60e67a2",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6c023e74-ade7-4d96-a015-bed4e22a69af",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ee7480eb-db5d-462d-99e9-959e38438b8f",
+                    "path": "<Keyboard>/leftArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a14ebd4e-ed51-466f-9ff0-81088ba62710",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "103f3392-2ebe-4ea7-b22a-f31c3f96fa60",
+                    "path": "<Keyboard>/rightArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "pc",
+                    "action": "MenuNavigationButtons",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
