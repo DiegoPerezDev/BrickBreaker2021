@@ -182,8 +182,6 @@ public class Ball : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            //Debug.Break();
-
             // For unstuck purposes
             hitObject = true;
 
